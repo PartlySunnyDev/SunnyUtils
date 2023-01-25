@@ -15,8 +15,8 @@ import java.util.Map;
 
 public class SLBCommand implements CommandExecutor {
 
-    public static Map<String, SLBSubCommand> subCommands = new HashMap<>();
     public static final String command = "slb";
+    public static Map<String, SLBSubCommand> subCommands = new HashMap<>();
 
     public static void registerSubCommand(SLBSubCommand c) {
         subCommands.put(c.getId(), c);
