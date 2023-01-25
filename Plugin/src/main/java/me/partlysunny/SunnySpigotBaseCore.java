@@ -9,6 +9,7 @@ import me.partlysunny.util.Util;
 import me.partlysunny.version.Version;
 import me.partlysunny.version.VersionManager;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 

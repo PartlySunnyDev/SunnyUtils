@@ -133,14 +133,7 @@
                 <directory>src/main/resources</directory>
                 <includes>
                     <include>plugin.yml</include>
-                    <include>blocks/*</include>
-                    <include>lootTables/*</include>
-                    <include>lootEntries/*</include>
-                    <include>structures/*</include>
-                    <include>wands/*</include>
-                    <include>triggers/*</include>
-                    <include>config.yml</include>
-                    <include>READ.txt</include>
+                    <!-- Add any other resources which need to be included in the final jar here directories will be <dirName>/* -->
                 </includes>
             </resource>
         </resources>
@@ -173,6 +166,7 @@
                 <version>3.3.0</version>
                 <configuration>
                     <nonFilteredFileExtensions>
+                        <!-- This stuff makes it so the program doesn't do strange things to the schematic files after building -->
                         <nonFilteredFileExtension>schem</nonFilteredFileExtension>
                         <nonFilteredFileExtension>schematic</nonFilteredFileExtension>
                     </nonFilteredFileExtensions>
