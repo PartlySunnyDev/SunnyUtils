@@ -13,8 +13,8 @@
 
     <description>Base plugin for 1.16+</description>
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>16</maven.compiler.source>
+        <maven.compiler.target>16</maven.compiler.target>
     </properties>
 
     <modules>
@@ -23,7 +23,7 @@
         <module>v1_16_R3</module>
         <module>v1_18_R2</module>
         <module>v1_18_R1</module>
-        <module>v1_19_R1</module>
+        <module>v1_19_R2</module>
         <module>Plugin</module>
     </modules>
 
