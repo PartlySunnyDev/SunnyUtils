@@ -4,6 +4,7 @@ import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.gui.type.util.Gui;
 import com.github.stefvanschie.inventoryframework.pane.PaginatedPane;
 import me.partlysunny.gui.SelectGui;
+import me.partlysunny.util.IFUtil;
 import me.partlysunny.util.Util;
 import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
@@ -24,9 +25,9 @@ public class PotionEffectTypeSelectGui extends SelectGui<PotionEffectType> {
             potionEffectList[count] = e.getKey().getKey();
             count++;
         }
-        Util.addListPages(pane, player, this, 1, 1, 7, 3, Util.getAlphabetSorted(potionEffectList), gui);
+        IFUtil.addListPages(pane, player, this, 1, 1, 7, 3, Util.getAlphabetSorted(potionEffectList), gui);
         gui.addPane(pane);
-        Util.setClickSoundTo(Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_OFF, gui);
+        IFUtil.setClickSoundTo(Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_OFF, gui);
         return gui;
     }
 

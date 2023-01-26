@@ -26,6 +26,11 @@ public class Pair<A, B> {
         this.b = b;
     }
 
+    public void flushNulls(A repA, B repB) {
+        if (a() == null) setA(repA);
+        if (b() == null) setB(repB);
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof Pair)) {

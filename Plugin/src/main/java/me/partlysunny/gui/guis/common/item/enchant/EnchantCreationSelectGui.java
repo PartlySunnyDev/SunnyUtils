@@ -7,6 +7,7 @@ import com.github.stefvanschie.inventoryframework.pane.StaticPane;
 import me.partlysunny.gui.GuiManager;
 import me.partlysunny.gui.SelectGui;
 import me.partlysunny.gui.SelectGuiManager;
+import me.partlysunny.util.IFUtil;
 import me.partlysunny.util.Util;
 import me.partlysunny.util.classes.ItemBuilder;
 import org.bukkit.ChatColor;
@@ -38,8 +39,8 @@ public class EnchantCreationSelectGui extends SelectGui<EnchantContainer> {
         values.put(player.getUniqueId(), c);
         StaticPane mainPane = new StaticPane(0, 0, 9, 3);
         mainPane.fillWith(new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
-        Util.addSelectionLink(mainPane, player, "enchantCreationSelect", "enchantmentSelect", ItemBuilder.builder(Material.ENCHANTED_BOOK).addEnchantment(c.enchant(), c.lvl()).build(), 3, 1);
-        Util.addTextInputLink(mainPane, player, "enchantCreationSelect", ChatColor.RED + "Enter enchant lvl or \"cancel\" to cancel", ItemBuilder.builder(Material.PAPER).setName(ChatColor.GRAY + "Change LVL").setLore(ChatColor.DARK_GRAY + "Current lvl: " + c.lvl()).build(), 5, 1, pl -> {
+        IFUtil.addSelectionLink(mainPane, player, "enchantCreationSelect", "enchantmentSelect", ItemBuilder.builder(Material.ENCHANTED_BOOK).addEnchantment(c.enchant(), c.lvl()).build(), 3, 1);
+        IFUtil.addTextInputLink(mainPane, player, "enchantCreationSelect", ChatColor.RED + "Enter enchant lvl or \"cancel\" to cancel", ItemBuilder.builder(Material.PAPER).setName(ChatColor.GRAY + "Change LVL").setLore(ChatColor.DARK_GRAY + "Current lvl: " + c.lvl()).build(), 5, 1, pl -> {
             boolean hasValue = this.values.containsKey(pl.getUniqueId());
             Integer currentInput = Util.getTextInputAsInt(pl);
             if (currentInput == null) {
@@ -62,7 +63,7 @@ public class EnchantCreationSelectGui extends SelectGui<EnchantContainer> {
             GuiManager.openInventory(player, getReturnTo(player));
         }), 8, 1);
         gui.addPane(mainPane);
-        Util.setClickSoundTo(Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_OFF, gui);
+        IFUtil.setClickSoundTo(Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_OFF, gui);
         return gui;
     }
 

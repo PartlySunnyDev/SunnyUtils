@@ -8,6 +8,7 @@ import me.partlysunny.gui.GuiManager;
 import me.partlysunny.gui.SelectGui;
 import me.partlysunny.gui.SelectGuiManager;
 import me.partlysunny.gui.textInput.ChatListener;
+import me.partlysunny.util.IFUtil;
 import me.partlysunny.util.Util;
 import me.partlysunny.util.classes.ItemBuilder;
 import org.bukkit.ChatColor;
@@ -51,14 +52,14 @@ public class ItemMakerSelectGui extends SelectGui<ItemStack> {
         if (lore == null) {
             lore = new ArrayList<>();
         }
-        Util.addSelectionLink(mainPane, player, "itemMakerSelect", "materialSelect", ItemBuilder.builder(mat).setName(mat.name()).build(), 1, 1);
+        IFUtil.addSelectionLink(mainPane, player, "itemMakerSelect", "materialSelect", ItemBuilder.builder(mat).setName(mat.name()).build(), 1, 1);
         ItemStack finalCurrent = current;
         mainPane.addItem(new GuiItem(ItemBuilder.builder(Material.ENCHANTED_BOOK).setName(ChatColor.LIGHT_PURPLE + "Modify Enchants").build(), x -> {
             SelectGuiManager.getSelectGui("enchantModifier").setReturnTo(p.getUniqueId(), "itemMakerSelect");
             p.closeInventory();
             ((SelectGui<ItemStack>) SelectGuiManager.getSelectGui("enchantModifier")).openWithValue(player, finalCurrent, "enchantModifierSelect");
         }), 3, 1);
-        Util.addTextInputLink(mainPane, player, "itemMakerSelect", ChatColor.RED + "Input new item name:", ItemBuilder.builder(Material.PAPER).setName(ChatColor.GRAY + "Change Name").setLore(ChatColor.GRAY + "Current Name: " + name).build(), 5, 1, pl -> {
+        IFUtil.addTextInputLink(mainPane, player, "itemMakerSelect", ChatColor.RED + "Input new item name:", ItemBuilder.builder(Material.PAPER).setName(ChatColor.GRAY + "Change Name").setLore(ChatColor.GRAY + "Current Name: " + name).build(), 5, 1, pl -> {
             boolean hasValue = this.values.containsKey(pl.getUniqueId());
             String input = Util.processText(ChatListener.getCurrentInput(pl));
             if (input.length() < 2 || input.length() > 30) {
@@ -70,7 +71,7 @@ public class ItemMakerSelectGui extends SelectGui<ItemStack> {
             }
             Util.setName(values.get(pl.getUniqueId()), input);
         });
-        Util.addTextInputLink(mainPane, player, "itemMakerSelect", ChatColor.RED + "Input new lore (will auto wrap):", ItemBuilder.builder(Material.PAPER).setName(ChatColor.GRAY + "Change Lore").setLore(lore.toArray(new String[0])).build(), 7, 1, pl -> {
+        IFUtil.addTextInputLink(mainPane, player, "itemMakerSelect", ChatColor.RED + "Input new lore (will auto wrap):", ItemBuilder.builder(Material.PAPER).setName(ChatColor.GRAY + "Change Lore").setLore(lore.toArray(new String[0])).build(), 7, 1, pl -> {
             boolean hasValue = this.values.containsKey(pl.getUniqueId());
             String input = Util.processText(ChatListener.getCurrentInput(pl));
             if (input.length() < 2) {
@@ -90,7 +91,7 @@ public class ItemMakerSelectGui extends SelectGui<ItemStack> {
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
             GuiManager.openInventory(player, getReturnTo(player));
         }), 8, 1);
-        Util.setClickSoundTo(Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_OFF, gui);
+        IFUtil.setClickSoundTo(Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_OFF, gui);
         gui.addPane(mainPane);
         return gui;
     }

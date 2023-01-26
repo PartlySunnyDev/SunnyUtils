@@ -8,6 +8,7 @@ import com.github.stefvanschie.inventoryframework.pane.StaticPane;
 import me.partlysunny.gui.GuiManager;
 import me.partlysunny.gui.SelectGui;
 import me.partlysunny.gui.SelectGuiManager;
+import me.partlysunny.util.IFUtil;
 import me.partlysunny.util.Util;
 import me.partlysunny.util.classes.ItemBuilder;
 import org.bukkit.ChatColor;
@@ -29,7 +30,7 @@ public class EnchantModifierSelectGui extends SelectGui<ItemStack> {
     public Gui getGui(HumanEntity p) {
         if (!(p instanceof Player player)) return new ChestGui(3, "");
         ChestGui gui = new ChestGui(5, ChatColor.DARK_AQUA + "Enchant Modifier");
-        Util.setClickSoundTo(Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_OFF, gui);
+        IFUtil.setClickSoundTo(Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_OFF, gui);
         PaginatedPane pane = new PaginatedPane(0, 0, 9, 5);
         int displaySize = 21;
         List<EnchantContainer> a = new ArrayList<>();
@@ -45,7 +46,7 @@ public class EnchantModifierSelectGui extends SelectGui<ItemStack> {
         for (int i = 0; i < numPages; i++) {
             StaticPane border = new StaticPane(0, 0, 9, 5);
             StaticPane items = new StaticPane(1, 1, 7, 3);
-            Util.addPageNav(pane, numPages, i, border, gui);
+            IFUtil.addPageNav(pane, numPages, i, border, gui);
             border.addItem(new GuiItem(ItemBuilder.builder(Material.GREEN_CONCRETE).setName(ChatColor.GREEN + "Add new").build(), item -> {
                 SelectGui<EnchantContainer> enchantCreation = (SelectGui<EnchantContainer>) (SelectGuiManager.getSelectGui("enchantCreation"));
                 enchantCreation.setReturnTo(player.getUniqueId(), "enchantModifierSelect");
@@ -87,7 +88,7 @@ public class EnchantModifierSelectGui extends SelectGui<ItemStack> {
             pane.addPane(i, items);
         }
         gui.addPane(pane);
-        Util.setClickSoundTo(Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_OFF, gui);
+        IFUtil.setClickSoundTo(Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_OFF, gui);
         return gui;
     }
 

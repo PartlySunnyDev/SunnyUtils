@@ -1,30 +1,15 @@
 package me.partlysunny.util;
 
-import com.github.stefvanschie.inventoryframework.gui.GuiItem;
-import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
-import com.github.stefvanschie.inventoryframework.gui.type.util.Gui;
-import com.github.stefvanschie.inventoryframework.pane.PaginatedPane;
-import com.github.stefvanschie.inventoryframework.pane.Pane;
-import com.github.stefvanschie.inventoryframework.pane.StaticPane;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import de.tr7zw.nbtapi.NBTBlock;
-import de.tr7zw.nbtapi.NBTChunk;
-import de.tr7zw.nbtapi.NBTCompound;
-import me.partlysunny.ConsoleLogger;
 import me.partlysunny.SunnySpigotBaseCore;
-import me.partlysunny.gui.GuiManager;
-import me.partlysunny.gui.SelectGui;
-import me.partlysunny.gui.SelectGuiManager;
 import me.partlysunny.gui.textInput.ChatListener;
-import me.partlysunny.util.classes.ItemBuilder;
 import me.partlysunny.util.classes.Pair;
 import me.partlysunny.util.reflection.JavaAccessor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
@@ -45,7 +30,6 @@ import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public final class Util {
@@ -159,11 +143,6 @@ public final class Util {
         return RAND.nextInt(b - a) + a;
     }
 
-    public static void setToLuckyBlockType(Block b, String t) {
-        NBTBlock nbtb = new NBTBlock(b);
-        nbtb.getData().setString("luckyType", t);
-    }
-
     public static String processText(String text) {
         if (text == null) {
             return "";
@@ -182,21 +161,6 @@ public final class Util {
         List<String> result = new ArrayList<>();
         texts.forEach(n -> result.add(processText(n)));
         return result;
-    }
-
-    public static String getLuckyBlockType(Block b) {
-        NBTBlock nbtb = new NBTBlock(b);
-        return nbtb.getData().getString("luckyType");
-    }
-
-    public static boolean isLuckyBlock(Block b) {
-        NBTChunk nbtc = new NBTChunk(b.getChunk());
-        NBTCompound c = nbtc.getPersistentDataContainer().getOrCreateCompound("blocks");
-        String key = b.getLocation().getX() + "_" + b.getLocation().getY() + "_" + b.getLocation().getZ();
-        if (c.hasKey(key)) {
-            return c.getCompound(key).hasKey("luckyType");
-        }
-        return false;
     }
 
     public static <T> T getOrDefault(ConfigurationSection y, String key, T def) {
@@ -228,15 +192,6 @@ public final class Util {
         if (!destination.exists()) {
             Files.copy(stream, destination.toPath());
         }
-    }
-
-    public static void setClickSoundTo(Sound s, Gui gui) {
-        gui.setOnGlobalClick(event -> {
-            if (event.getWhoClicked() instanceof Player a) {
-                a.playSound(a.getLocation(), s, 1, 1);
-            }
-            event.setCancelled(true);
-        });
     }
 
     public static List<String> splitLoreForLine(String input, String linePrefix, String lineSuffix, int width) {
@@ -326,101 +281,9 @@ public final class Util {
         };
     }
 
-    @SafeVarargs
-    public static ChestGui getGeneralSelectionMenu(String title, Player p, Pair<String, ItemStack>... items) {
-        if (items.length > 9) {
-            ConsoleLogger.error("Too many items! (Max supported 9)");
-        }
-        double[] linspace = fakeSpace(items.length);
-        ChestGui ui = new ChestGui(3, title);
-        StaticPane pane = new StaticPane(0, 0, 9, 3);
-        pane.fillWith(ItemBuilder.builder(Material.GRAY_STAINED_GLASS_PANE).build());
-        setClickSoundTo(Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_OFF, ui);
-        int count = 0;
-        for (double d : linspace) {
-            int finalCount = count;
-            pane.addItem(new GuiItem(
-                    items[count].b(),
-                    (item) -> {
-                        GuiManager.openInventory(p, items[finalCount].a());
-                    }
-            ), (int) Math.round(d), 1);
-            count++;
-        }
-        ui.addPane(pane);
-        return ui;
-    }
-
-    public static void addListPages(PaginatedPane pane, Player p, SelectGui<?> from, int x, int y, int width, int height, String[] a, ChestGui gui) {
-        pane.setOnClick(event -> {
-            if (event.getWhoClicked() instanceof Player pp) {
-                pp.playSound(pp.getLocation(), Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_OFF, 1, 1);
-            }
-            event.setCancelled(true);
-        });
-        int displaySize = width * height;
-        if (displaySize < 1) {
-            return;
-        }
-        int numPages = (int) Math.ceil(a.length / (displaySize * 1f));
-        if (numPages == 0) {
-            numPages = 1;
-        }
-        int count = 0;
-        for (int i = 0; i < numPages; i++) {
-            StaticPane border = new StaticPane(0, 0, 9, 5, Pane.Priority.HIGH);
-            StaticPane items = new StaticPane(x, y, width, height, Pane.Priority.HIGHEST);
-            addPageNav(pane, numPages, i, border, gui);
-            items.fillWith(ItemBuilder.builder(Material.GRAY_STAINED_GLASS_PANE).setName("").build());
-            for (int j = count; j < count + displaySize; j++) {
-                if (j > a.length - 1) {
-                    break;
-                }
-                String itemName = a[j];
-                items.addItem(new GuiItem(ItemBuilder.builder(Material.PAPER).setName(ChatColor.GRAY + itemName).build(), item -> {
-                    from.update(p.getUniqueId(), itemName);
-                    from.returnTo(p);
-                }), (j - count) % width, (j - count) / width);
-            }
-            count += displaySize;
-            Util.addReturnButton(border, p, from.getReturnTo(p), 0, 4);
-            pane.addPane(i, border);
-            pane.addPane(i, items);
-        }
-    }
-
-    public static void addPageNav(PaginatedPane pane, int numPages, int i, StaticPane border, ChestGui gui) {
-        border.fillWith(ItemBuilder.builder(Material.BLACK_STAINED_GLASS_PANE).setName("").build());
-        if (i != 0) {
-            border.addItem(new GuiItem(ItemBuilder.builder(Material.ARROW).setName(ChatColor.GRAY + "Page Back").setLore(ChatColor.GREEN + "Right click for 5 pages", ChatColor.RED + "Shift Click for 15 pages").build(), item -> {
-                if (item.isShiftClick()) Util.changePage(pane, -15);
-                else if (item.isLeftClick()) Util.changePage(pane, -1);
-                else if (item.isRightClick()) Util.changePage(pane, -5);
-                gui.update();
-            }), 0, 2);
-        }
-        if (i != numPages - 1) {
-            border.addItem(new GuiItem(ItemBuilder.builder(Material.ARROW).setName(ChatColor.GRAY + "Page Forward").setLore(ChatColor.GREEN + "Right click for 5 pages", ChatColor.RED + "Shift Click for 15 pages").build(), item -> {
-                if (item.isShiftClick()) Util.changePage(pane, 15);
-                else if (item.isLeftClick()) Util.changePage(pane, 1);
-                else if (item.isRightClick()) Util.changePage(pane, 5);
-                gui.update();
-            }), 8, 2);
-        }
-    }
-
     public static void invalid(String message, Player p) {
         p.sendMessage(ChatColor.RED + message);
         p.playSound(p.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
-    }
-
-    public static <T, U> void flushNulls(Pair<T, U> pair, T repT, U repU) {
-        if (pair.a() == null) {
-            pair.setA(repT);
-        }
-        if (pair.b() == null) {
-            pair.setB(repU);
-        }
     }
 
     public static void addLoreLine(ItemStack s, String... lines) {
@@ -432,27 +295,6 @@ public final class Util {
         lore.addAll(List.of(lines));
         m.setLore(lore);
         s.setItemMeta(m);
-    }
-
-    public static void addSelectionLink(StaticPane pane, Player p, String currentGui, String selectionLink, ItemStack toShow, int x, int y) {
-        pane.addItem(new GuiItem(toShow, item -> {
-            SelectGuiManager.getSelectGui(selectionLink.substring(0, selectionLink.length() - 6)).setReturnTo(p.getUniqueId(), currentGui);
-            p.closeInventory();
-            GuiManager.openInventory(p, selectionLink);
-        }), x, y);
-    }
-
-    public static void addTextInputLink(StaticPane pane, Player p, String currentGui, String message, ItemStack toShow, int x, int y, Consumer<Player> toDo) {
-        pane.addItem(new GuiItem(toShow, item -> {
-            ChatListener.startChatListen(p, currentGui, message, toDo);
-            p.closeInventory();
-        }), x, y);
-    }
-
-    public static void addReturnButton(StaticPane pane, Player p, String returnTo, int x, int y) {
-        pane.addItem(new GuiItem(ItemBuilder.builder(Material.ARROW).setName(ChatColor.GREEN + "Back").build(), item -> {
-            GuiManager.openInventory(p, returnTo);
-        }), x, y);
     }
 
     public static void setName(ItemStack i, String name) {
@@ -526,26 +368,6 @@ public final class Util {
         if (f.exists() && !f.isDirectory()) {
             f.delete();
         }
-    }
-
-    public static ConfigurationSection getEnchantSection(Map<Enchantment, Integer> enchants) {
-        ConfigurationSection returned = new YamlConfiguration();
-        for (Enchantment e : enchants.keySet()) {
-            String key = e.getKey().getKey();
-            int lvl = enchants.get(e);
-            ConfigurationSection subSection = new YamlConfiguration();
-            subSection.set("id", key);
-            subSection.set("lvl", lvl);
-            returned.set(key, subSection);
-        }
-        return returned;
-    }
-
-    public static void changePage(PaginatedPane p, int amount) {
-        int current = p.getPage();
-        int newAmount = current + amount;
-        if (newAmount < 0) p.setPage(0);
-        else p.setPage(Math.min(newAmount, p.getPages() - 1));
     }
 
     /**
