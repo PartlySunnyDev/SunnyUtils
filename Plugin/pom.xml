@@ -133,6 +133,7 @@
                 <directory>src/main/resources</directory>
                 <includes>
                     <include>plugin.yml</include>
+                    <include>config.yml</include>
                     <!-- Add any other resources which need to be included in the final jar here directories will be <dirName>/* -->
                 </includes>
             </resource>
