@@ -11,7 +11,7 @@ import me.partlysunny.gui.GuiManager;
 import me.partlysunny.gui.SelectGui;
 import me.partlysunny.gui.SelectGuiManager;
 import me.partlysunny.gui.textInput.ChatListener;
-import me.partlysunny.util.classes.ItemBuilder;
+import me.partlysunny.util.classes.builders.ItemBuilder;
 import me.partlysunny.util.classes.Pair;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;

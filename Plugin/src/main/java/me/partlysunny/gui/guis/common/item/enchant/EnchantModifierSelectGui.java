@@ -10,7 +10,7 @@ import me.partlysunny.gui.SelectGui;
 import me.partlysunny.gui.SelectGuiManager;
 import me.partlysunny.util.IFUtil;
 import me.partlysunny.util.Util;
-import me.partlysunny.util.classes.ItemBuilder;
+import me.partlysunny.util.classes.builders.ItemBuilder;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;

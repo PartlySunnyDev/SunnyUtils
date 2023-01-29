@@ -1,4 +1,4 @@
-package me.partlysunny.util.classes;
+package me.partlysunny.util.classes.builders;
 
 import de.tr7zw.nbtapi.NBTItem;
 import org.bukkit.Material;
@@ -59,6 +59,11 @@ public class ItemBuilder {
 
     public ItemBuilder addEnchantment(Enchantment e, int level) {
         enchants.put(e, level);
+        return this;
+    }
+
+    public ItemBuilder addEnchantment(EnchantBundle bundle) {
+        enchants.putAll(bundle.bundle());
         return this;
     }
 

@@ -1,4 +1,4 @@
-package me.partlysunny.util.classes;
+package me.partlysunny.util.classes.builders;
 
 import jline.internal.Nullable;
 import org.bukkit.Color;

@@ -1,4 +1,4 @@
-package me.partlysunny.util.classes;
+package me.partlysunny.util.classes.gear;
 
 import com.google.common.base.Preconditions;
 import org.bukkit.entity.Player;
@@ -7,13 +7,13 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.Arrays;
 
-public class Gear {
+public class PlayerGear {
 
     private ItemStack[] hotbar = new ItemStack[9];
     private ItemStack offHand = null;
     private ItemStack[] armor = new ItemStack[4];
 
-    private Gear() {
+    private PlayerGear() {
         Arrays.fill(hotbar, null);
         Arrays.fill(armor, null);
     }
@@ -32,34 +32,34 @@ public class Gear {
         }
     }
 
-    public static final class GearBuilder {
+    public static final class Builder {
 
-        private final Gear internal;
+        private final PlayerGear internal;
 
-        public GearBuilder() {
-            internal = new Gear();
+        public Builder() {
+            internal = new PlayerGear();
         }
 
-        public static GearBuilder builder() {
-            return new GearBuilder();
+        public static Builder builder() {
+            return new Builder();
         }
 
-        public GearBuilder setOffHand(ItemStack i) {
+        public Builder setOffHand(ItemStack i) {
             internal.offHand = i;
             return this;
         }
 
-        public GearBuilder setArmor(ItemStack... i) {
+        public Builder setArmor(ItemStack... i) {
             internal.armor = i;
             return this;
         }
 
-        public GearBuilder setHotbar(ItemStack... i) {
+        public Builder setHotbar(ItemStack... i) {
             internal.hotbar = i;
             return this;
         }
 
-        public Gear build() {
+        public PlayerGear build() {
             return internal;
         }
 
