@@ -1,5 +1,8 @@
 package me.partlysunny.util;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.partlysunny.SunnySpigotBaseCore;
@@ -22,9 +25,6 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 import java.io.*;
 import java.net.URL;
@@ -71,14 +71,13 @@ public final class Util {
         if (getPlayerId(username).equals("none")) return "none";
         String url = "https://api.minetools.eu/profile/" + getPlayerId(username);
         try {
-            JSONParser jsonParser = new JSONParser();
             String userData = readUrl(url);
-            Object parsedData = jsonParser.parse(userData);
+            Object parsedData = JsonParser.parseString(userData);
 
-            JSONObject jsonData = (JSONObject) parsedData;
-            JSONObject decoded = (JSONObject) jsonData.get("raw");
-            JSONArray textures = (JSONArray) decoded.get("properties");
-            JSONObject data = (JSONObject) textures.get(0);
+            JsonObject jsonData = (JsonObject) parsedData;
+            JsonObject decoded = (JsonObject) jsonData.get("raw");
+            JsonArray textures = (JsonArray) decoded.get("properties");
+            JsonObject data = (JsonObject) textures.get(0);
 
             return data.get("value").toString();
         } catch (Exception ex) {
@@ -104,11 +103,10 @@ public final class Util {
     private static String getPlayerId(String playerName) {
         try {
             String url = "https://api.minetools.eu/uuid/" + playerName;
-            JSONParser jsonParser = new JSONParser();
             String userData = readUrl(url);
-            Object parsedData = jsonParser.parse(userData);
+            Object parsedData = JsonParser.parseString(userData);
 
-            JSONObject jsonData = (JSONObject) parsedData;
+            JsonObject jsonData = (JsonObject) parsedData;
 
             if (jsonData.get("id") != null) return jsonData.get("id").toString();
             return "";
