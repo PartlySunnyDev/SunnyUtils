@@ -1,12 +1,12 @@
 package me.partlysunny.commands.subcommands;
 
-import me.partlysunny.commands.SLBCommand;
+import me.partlysunny.commands.SCommand;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
 import java.util.Collection;
 
-public class HelpSubCommand implements SLBSubCommand {
+public class HelpSubCommand implements ISubCommand {
     @Override
     public String getId() {
         return "help";
@@ -24,9 +24,9 @@ public class HelpSubCommand implements SLBSubCommand {
 
     @Override
     public void execute(CommandSender executor, String[] args) {
-        Collection<SLBSubCommand> commands = SLBCommand.subCommands.values();
+        Collection<ISubCommand> commands = SCommand.subCommands.values();
         executor.sendMessage(ChatColor.YELLOW + "List of commands (run with /sbl <command>):");
-        for (SLBSubCommand c : commands) {
+        for (ISubCommand c : commands) {
             executor.sendMessage(ChatColor.WHITE + c.getId() + c.getUsage() + ": " + c.getDescription());
         }
     }

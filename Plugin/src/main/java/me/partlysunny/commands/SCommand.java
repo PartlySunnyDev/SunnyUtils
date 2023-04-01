@@ -1,40 +1,39 @@
 package me.partlysunny.commands;
 
-import me.partlysunny.commands.subcommands.SLBSubCommand;
+import me.partlysunny.commands.subcommands.ISubCommand;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SLBCommand implements CommandExecutor {
+public class SCommand implements CommandExecutor {
 
-    public static final String command = "slb";
-    public static Map<String, SLBSubCommand> subCommands = new HashMap<>();
+    public static final String command = "sunny";
+    public static Map<String, ISubCommand> subCommands = new HashMap<>();
 
-    public static void registerSubCommand(SLBSubCommand c) {
+    public static void registerSubCommand(ISubCommand c) {
         subCommands.put(c.getId(), c);
     }
 
     public static boolean executeSubCommand(String id, CommandSender exe, String[] args) {
-        SLBSubCommand slbSubCommand = subCommands.get(id);
-        if (slbSubCommand == null) {
+        ISubCommand subCommand = subCommands.get(id);
+        if (subCommand == null) {
             return false;
         }
-        slbSubCommand.execute(exe, args);
+        subCommand.execute(exe, args);
         return true;
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
+    public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
         if (commandSender instanceof Player p) {
-            if (!p.hasPermission(SLBCommand.command + ".admin")) {
+            if (!p.hasPermission(SCommand.command + ".admin")) {
                 p.sendMessage(ChatColor.RED + "You cannot use this command!");
                 return true;
             }

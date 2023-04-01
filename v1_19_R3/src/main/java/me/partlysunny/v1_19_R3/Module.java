@@ -1,4 +1,4 @@
-package me.partlysunny.v1_19_R2;
+package me.partlysunny.v1_19_R3;
 
 import me.partlysunny.api.IModule;
 import org.bukkit.plugin.java.JavaPlugin;

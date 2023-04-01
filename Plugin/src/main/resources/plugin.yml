@@ -4,10 +4,10 @@ main: me.partlysunny.SunnySpigotBaseCore
 api-version: 1.16
 commands:
   slb:
-    aliases: [ simpleluckyblocks, slb ]
+    aliases: [ sunnyspigotbase, sunny ]
     description: SunnySpigotBase base command for ops
 
 permissions:
   slb.admin:
     default: op
-    description: Admin commands (from /slb)
+    description: Admin commands (from /sunny)

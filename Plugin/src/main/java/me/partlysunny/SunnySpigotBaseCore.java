@@ -1,7 +1,7 @@
 package me.partlysunny;
 
-import me.partlysunny.commands.SLBCommand;
-import me.partlysunny.commands.SLBTabCompleter;
+import me.partlysunny.commands.SCommand;
+import me.partlysunny.commands.STabCompleter;
 import me.partlysunny.commands.subcommands.HelpSubCommand;
 import me.partlysunny.gui.SelectGuiManager;
 import me.partlysunny.gui.textInput.ChatListener;
@@ -19,7 +19,7 @@ import java.security.CodeSource;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static me.partlysunny.commands.SLBCommand.command;
+import static me.partlysunny.commands.SCommand.command;
 
 public final class SunnySpigotBaseCore extends JavaPlugin {
 
@@ -76,14 +76,14 @@ public final class SunnySpigotBaseCore extends JavaPlugin {
 
     private void registerCommands() {
         //Register all sub commands here
-        SLBCommand.registerSubCommand(new HelpSubCommand());
+        SCommand.registerSubCommand(new HelpSubCommand());
         PluginCommand mainCommand = getCommand(command);
         if (mainCommand == null) {
             ConsoleLogger.error("Main command doesn't exist! Check plugin.yml for more info");
             return;
         }
-        mainCommand.setExecutor(new SLBCommand());
-        mainCommand.setTabCompleter(new SLBTabCompleter());
+        mainCommand.setExecutor(new SCommand());
+        mainCommand.setTabCompleter(new STabCompleter());
     }
 
     private void initDefaults() throws IOException {

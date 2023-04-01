@@ -25,4 +25,4 @@ BuildTools is a jar provide by Spigot to compile CraftBukkit and NMS
 3. Create a directory `BuildToolsVERSION`
 4. With `BuildTools.jar` inside that directory, run `java -jar BuildTools.jar --rev VERSION --remapped`
 5. Wait for te process to finish
-6. Now, you can start from Step 3 to build the rest of the versions. You should build 1.16.5, 1.17.1, 1.18.2, and 1.19.3
+6. Now, you can start from Step 3 to build the rest of the versions. You should build 1.16.5, 1.17.1, 1.18.2, and 1.19.4
