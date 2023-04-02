@@ -19,18 +19,16 @@ public class CheckerPredicate {
 
     public static final CheckerPredicate TRUE = new CheckerPredicate("true");
     public static final CheckerPredicate FALSE = new CheckerPredicate("false");
-
-    public static CheckerPredicate from(boolean b) {
-        return b ? TRUE : FALSE;
-    }
-
     private final String predicate;
     private final List<String> chunks;
-
     public CheckerPredicate(String s) {
         this.predicate = s;
         this.chunks = chunk();
         checkValid();
+    }
+
+    public static CheckerPredicate from(boolean b) {
+        return b ? TRUE : FALSE;
     }
 
     private void checkValid() {

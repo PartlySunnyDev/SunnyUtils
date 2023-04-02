@@ -6,7 +6,8 @@ public class PredicateContext {
 
     private final HashMap<String, String> context = new HashMap<>();
 
-    public PredicateContext() {}
+    public PredicateContext() {
+    }
 
     public PredicateContext(HashMap<String, String> init) {
         context.putAll(init);
