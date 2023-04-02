@@ -1,20 +1,14 @@
-package me.partlysunny.util.classes.predicates.relationships;
+package me.partlysunny.util.classes.predicates.relationships
 
-public enum Relationship {
-    AND(AndRelationship.class),
-    NAND(NandRelationship.class),
-    OR(OrRelationship.class),
-    NOR(NorRelationship.class),
-    XNOR(XNORRelationship.class),
-    XOR(XORRelationship.class);
+enum class Relationship(private val clazz: Class<out PredicateRelationship>) {
+    AND(AndRelationship::class.java),
+    NAND(NandRelationship::class.java),
+    OR(OrRelationship::class.java),
+    NOR(NorRelationship::class.java),
+    XNOR(XNORRelationship::class.java),
+    XOR(XORRelationship::class.java);
 
-    private final Class<? extends PredicateRelationship> clazz;
-
-    Relationship(Class<? extends PredicateRelationship> clazz) {
-        this.clazz = clazz;
-    }
-
-    public Class<? extends PredicateRelationship> clazz() {
-        return clazz;
+    fun clazz(): Class<out PredicateRelationship> {
+        return clazz
     }
 }

@@ -1,30 +1,21 @@
-package me.partlysunny.gui.guis.common.item.enchant;
+package me.partlysunny.gui.guis.common.item.enchant
 
-import org.bukkit.enchantments.Enchantment;
+import org.bukkit.enchantments.Enchantment
 
-public class EnchantContainer {
-
-    private Enchantment enchant;
-    private int lvl;
-
-    public EnchantContainer(Enchantment enchant, int lvl) {
-        this.enchant = enchant;
-        this.lvl = lvl;
+class EnchantContainer(private var enchant: Enchantment?, private var lvl: Int) {
+    fun enchant(): Enchantment? {
+        return enchant
     }
 
-    public Enchantment enchant() {
-        return enchant;
+    fun setEnchant(enchant: Enchantment?) {
+        this.enchant = enchant
     }
 
-    public void setEnchant(Enchantment enchant) {
-        this.enchant = enchant;
+    fun lvl(): Int {
+        return lvl
     }
 
-    public int lvl() {
-        return lvl;
-    }
-
-    public void setLvl(int lvl) {
-        this.lvl = lvl;
+    fun setLvl(lvl: Int) {
+        this.lvl = lvl
     }
 }

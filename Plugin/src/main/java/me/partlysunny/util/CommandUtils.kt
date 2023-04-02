@@ -1,223 +1,210 @@
-package me.partlysunny.util;
+package me.partlysunny.util
 
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.command.BlockCommandSender;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Damageable;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.minecart.CommandMinecart;
-import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.Team;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
+import org.bukkit.Bukkit
+import org.bukkit.GameMode
+import org.bukkit.Location
+import org.bukkit.World
+import org.bukkit.command.BlockCommandSender
+import org.bukkit.command.CommandSender
+import org.bukkit.entity.Damageable
+import org.bukkit.entity.Entity
+import org.bukkit.entity.HumanEntity
+import org.bukkit.entity.Player
+import org.bukkit.entity.minecart.CommandMinecart
+import java.util.*
+import java.util.concurrent.ThreadLocalRandom
 
 //NOT BY ME!!!! https://github.com/ZombieStriker/PsudoCommands/blob/master/src/me/zombie_striker/psudocommands/CommandUtils.java :)) ty
-public class CommandUtils {
-
+object CommandUtils {
     /**
      * Use this if you are unsure if a player provided the "@a" tag. This will allow
      * multiple entities to be retrieved.
-     * <p>
+     *
+     *
      * This can return a null variable if no tags are included, or if a value for a
      * tag does not exist (I.e if the tag [type=___] contains an entity that does
      * not exist in the specified world)
-     * <p>
+     *
+     *
      * The may also be empty or null values at the end of the array. Once a null
      * value has been reached, you do not need to loop through any of the higher
      * indexes
-     * <p>
+     *
+     *
      * Currently supports the tags:
      *
      * @param arg    the argument that we are testing for
      * @param sender the sender of the command
      * @return The entities that match the criteria
      * @p , @a , @e , @r
-     * <p>
+     *
+     *
      * Currently supports the selectors: [type=] [r=] [rm=] [c=] [w=] [m=]
      * [name=] [l=] [lm=] [h=] [hm=] [rx=] [rxm=] [ry=] [rym=] [team=]
      * [score_---=] [score_---_min=] [x] [y] [z] [limit=] [x_rotation] [y_rotation]
-     * <p>
+     *
+     *
      * All selectors can be inverted.
      */
-    public static Entity[] getTargets(CommandSender sender, String arg) {
-        Entity[] ents;
-        Location loc = null;
-        if (sender instanceof Player) {
-            loc = ((Player) sender).getLocation();
-        } else if (sender instanceof BlockCommandSender) {
+    fun getTargets(sender: CommandSender, arg: String): Array<Entity?>? {
+        val ents: Array<Entity?>
+        var loc: Location? = null
+        if (sender is Player) {
+            loc = sender.location
+        } else if (sender is BlockCommandSender) {
             // Center of block.
-            loc = ((BlockCommandSender) sender).getBlock().getLocation().add(0.5, 0, 0.5);
-        } else if (sender instanceof CommandMinecart) {
-            loc = ((CommandMinecart) sender).getLocation();
+            loc = sender.block.location.add(0.5, 0.0, 0.5)
+        } else if (sender is CommandMinecart) {
+            loc = sender.location
         }
-        String[] tags = getTags(arg);
+        val tags = getTags(arg)
 
         // prefab fix
-        for (String s : tags) {
+        for (s in tags) {
             if (hasTag(SelectorType.X, s)) {
-                loc.setX(getInt(s));
+                loc!!.x = getInt(s).toDouble()
             } else if (hasTag(SelectorType.Y, s)) {
-                loc.setY(getInt(s));
+                loc!!.y = getInt(s).toDouble()
             } else if (hasTag(SelectorType.Z, s)) {
-                loc.setZ(getInt(s));
+                loc!!.z = getInt(s).toDouble()
             }
         }
-
         if (arg.startsWith("@s")) {
-            ents = new Entity[1];
-            if (sender instanceof Player) {
-                boolean good = true;
-                for (int b = 0; b < tags.length; b++) {
-                    if (!canBeAccepted(tags[b], (Entity) sender, loc)) {
-                        good = false;
-                        break;
+            ents = arrayOfNulls(1)
+            if (sender is Player) {
+                var good = true
+                for (b in tags.indices) {
+                    if (!canBeAccepted(tags[b], sender as Entity, loc)) {
+                        good = false
+                        break
                     }
                 }
                 if (good) {
-                    ents[0] = (Entity) sender;
+                    ents[0] = sender as Entity
                 }
             } else {
-                return null;
+                return null
             }
-            return ents;
+            return ents
         } else if (arg.startsWith("@a")) {
             // ents = new Entity[maxEnts];
-            List<Entity> listOfValidEntities = new ArrayList<>();
-            int C = getLimit(arg);
-
-            boolean usePlayers = true;
-            for (String tag : tags) {
+            val listOfValidEntities: MutableList<Entity?> = ArrayList()
+            val C = getLimit(arg)
+            var usePlayers = true
+            for (tag in tags) {
                 if (hasTag(SelectorType.TYPE, tag)) {
-                    usePlayers = false;
-                    break;
+                    usePlayers = false
+                    break
                 }
             }
-            List<Entity> ea = new ArrayList<Entity>(Bukkit.getOnlinePlayers());
+            val ea: MutableList<Entity> = ArrayList(Bukkit.getOnlinePlayers())
             if (!usePlayers) {
-                ea.clear();
-                for (World w : getAcceptedWorldsFullString(loc, arg)) {
-                    ea.addAll(w.getEntities());
+                ea.clear()
+                for (w in getAcceptedWorldsFullString(loc, arg)) {
+                    ea.addAll(w!!.entities)
                 }
             }
-            for (Entity e : ea) {
-                if (listOfValidEntities.size() >= C)
-                    break;
-                boolean isValid = true;
-                for (int b = 0; b < tags.length; b++) {
+            for (e in ea) {
+                if (listOfValidEntities.size >= C) break
+                var isValid = true
+                for (b in tags.indices) {
                     if (!canBeAccepted(tags[b], e, loc)) {
-                        isValid = false;
-                        break;
+                        isValid = false
+                        break
                     }
                 }
                 if (isValid) {
-                    listOfValidEntities.add(e);
+                    listOfValidEntities.add(e)
                 }
             }
-
-            ents = listOfValidEntities.toArray(new Entity[listOfValidEntities.size()]);
-
+            ents = listOfValidEntities.toTypedArray<Entity?>()
         } else if (arg.startsWith("@p")) {
-            ents = new Entity[1];
-            double closestInt = Double.MAX_VALUE;
-            Entity closest = null;
-
-            for (World w : getAcceptedWorldsFullString(loc, arg)) {
-                for (Player e : w.getPlayers()) {
-                    if (e == sender)
-                        continue;
-                    Location temp = loc;
-                    if (temp == null)
-                        temp = e.getWorld().getSpawnLocation();
-                    double distance = e.getLocation().distanceSquared(temp);
+            ents = arrayOfNulls(1)
+            var closestInt = Double.MAX_VALUE
+            var closest: Entity? = null
+            for (w in getAcceptedWorldsFullString(loc, arg)) {
+                for (e in w!!.players) {
+                    if (e === sender) continue
+                    var temp = loc
+                    if (temp == null) temp = e.world.spawnLocation
+                    val distance = e.location.distanceSquared(temp)
                     if (closestInt > distance) {
-                        boolean good = true;
-                        for (String tag : tags) {
+                        var good = true
+                        for (tag in tags) {
                             if (!canBeAccepted(tag, e, temp)) {
-                                good = false;
-                                break;
+                                good = false
+                                break
                             }
                         }
                         if (good) {
-                            closestInt = distance;
-                            closest = e;
+                            closestInt = distance
+                            closest = e
                         }
                     }
                 }
             }
-            ents[0] = closest;
+            ents[0] = closest
         } else if (arg.startsWith("@e")) {
-            List<Entity> entities = new ArrayList<Entity>();
-            int C = getLimit(arg);
-            for (World w : getAcceptedWorldsFullString(loc, arg)) {
-                for (Entity e : w.getEntities()) {
-                    if (entities.size() > C)
-                        break;
-                    if (e == sender)
-                        continue;
-                    boolean valid = true;
-                    for (String tag : tags) {
+            val entities: MutableList<Entity?> = ArrayList()
+            val C = getLimit(arg)
+            for (w in getAcceptedWorldsFullString(loc, arg)) {
+                for (e in w!!.entities) {
+                    if (entities.size > C) break
+                    if (e === sender) continue
+                    var valid = true
+                    for (tag in tags) {
                         if (!canBeAccepted(tag, e, loc)) {
-                            valid = false;
-                            break;
+                            valid = false
+                            break
                         }
                     }
                     if (valid) {
-                        entities.add(e);
+                        entities.add(e)
                     }
                 }
             }
-            ents = entities.toArray(new Entity[entities.size()]);
+            ents = entities.toTypedArray<Entity?>()
         } else if (arg.startsWith("@r")) {
-            Random r = ThreadLocalRandom.current();
-            ents = new Entity[1];
-
-            List<Entity> validEntities = new ArrayList<>();
-            for (World w : getAcceptedWorldsFullString(loc, arg)) {
+            val r: Random = ThreadLocalRandom.current()
+            ents = arrayOfNulls(1)
+            val validEntities: MutableList<Entity> = ArrayList()
+            for (w in getAcceptedWorldsFullString(loc, arg)) {
                 if (hasTag(SelectorType.TYPE, arg)) {
-                    for (Entity e : w.getEntities()) {
-                        boolean good = true;
-                        for (String tag : tags) {
+                    for (e in w!!.entities) {
+                        var good = true
+                        for (tag in tags) {
                             if (!canBeAccepted(tag, e, loc)) {
-                                good = false;
-                                break;
+                                good = false
+                                break
                             }
                         }
-                        if (good)
-                            validEntities.add(e);
+                        if (good) validEntities.add(e)
                     }
                 } else {
-                    for (Entity e : Bukkit.getOnlinePlayers()) {
-                        boolean good = true;
-                        for (String tag : tags) {
+                    for (e in Bukkit.getOnlinePlayers()) {
+                        var good = true
+                        for (tag in tags) {
                             if (!canBeAccepted(tag, e, loc)) {
-                                good = false;
-                                break;
+                                good = false
+                                break
                             }
                         }
-                        if (good)
-                            validEntities.add(e);
+                        if (good) validEntities.add(e)
                     }
                 }
             }
-            ents[0] = validEntities.get(r.nextInt(validEntities.size()));
+            ents[0] = validEntities[r.nextInt(validEntities.size)]
         } else {
-            ents = new Entity[]{Bukkit.getPlayer(arg)};
+            ents = arrayOf(Bukkit.getPlayer(arg))
         }
-        return ents;
+        return ents
     }
 
     /**
      * Returns one entity. Use this if you know the player will not provide the '@a'
      * tag.
-     * <p>
+     *
+     *
      * This can return a null variable if no tags are included, or if a value for a
      * tag does not exist (I.e if the tag [type=___] contains an entity that does
      * not exist in the specified world)
@@ -226,18 +213,18 @@ public class CommandUtils {
      * @param arg    the argument of the target
      * @return The first entity retrieved.
      */
-    public static Entity getTarget(CommandSender sender, String arg) {
-        Entity[] e = getTargets(sender, arg);
-        if (e.length == 0)
-            return null;
-        return e[0];
+    fun getTarget(sender: CommandSender, arg: String): Entity? {
+        val e = getTargets(sender, arg)
+        return if (e!!.size == 0) null else e[0]
     }
 
     /**
      * Returns an integer. Use this to support "~" by providing what it will mean.
-     * <p>
+     *
+     *
      * E.g. rel="x" when ~ should be turn into the entity's X coord.
-     * <p>
+     *
+     *
      * Currently supports "x", "y" and "z".
      *
      * @param arg The target
@@ -245,519 +232,438 @@ public class CommandUtils {
      * @param e   The entity to check relative to.
      * @return the int
      */
-    public static int getIntRelative(String arg, String rel, Entity e) {
-        int relInt = 0;
+    fun getIntRelative(arg: String, rel: String, e: Entity): Int {
+        var relInt = 0
         if (arg.startsWith("~")) {
-            switch (rel.toLowerCase()) {
-                case "x":
-                    relInt = e.getLocation().getBlockX();
-                    break;
-                case "y":
-                    relInt = e.getLocation().getBlockY();
-                    break;
-                case "z":
-                    relInt = e.getLocation().getBlockZ();
-                    break;
+            when (rel.lowercase(Locale.getDefault())) {
+                "x" -> relInt = e.location.blockX
+                "y" -> relInt = e.location.blockY
+                "z" -> relInt = e.location.blockZ
             }
-            return mathIt(arg, relInt);
+            return mathIt(arg, relInt)
         } else if (arg.startsWith("^")) {
             // TODO: Fix code. The currently just acts the same as ~. This should move the
             // entity relative to what its looking at.
-
-            switch (rel.toLowerCase()) {
-                case "x":
-                    relInt = e.getLocation().getBlockX();
-                    break;
-                case "y":
-                    relInt = e.getLocation().getBlockY();
-                    break;
-                case "z":
-                    relInt = e.getLocation().getBlockZ();
-                    break;
+            when (rel.lowercase(Locale.getDefault())) {
+                "x" -> relInt = e.location.blockX
+                "y" -> relInt = e.location.blockY
+                "z" -> relInt = e.location.blockZ
             }
-            return mathIt(arg, relInt);
+            return mathIt(arg, relInt)
         }
-        return 0;
+        return 0
     }
 
-    private static boolean canBeAccepted(String arg, Entity e, Location loc) {
-        if (hasTag(SelectorType.X_ROTATION, arg) && isWithinYaw(arg, e))
-            return true;
-        if (hasTag(SelectorType.Y_ROTATION, arg) && isWithinPitch(arg, e))
-            return true;
-        if (hasTag(SelectorType.TYPE, arg) && isType(arg, e))
-            return true;
-        if (hasTag(SelectorType.NAME, arg) && isName(arg, e))
-            return true;
-        if (hasTag(SelectorType.TEAM, arg) && isTeam(arg, e))
-            return true;
-        if (hasTag(SelectorType.SCORE_FULL, arg) && isScore(arg, e))
-            return true;
-        if (hasTag(SelectorType.SCORE_MIN, arg) && isScoreMin(arg, e))
-            return true;
-        if (hasTag(SelectorType.SCORE_13, arg) && isScoreWithin(arg, e))
-            return true;
-        if (hasTag(SelectorType.DISTANCE, arg) && isWithinDistance(arg, loc, e))
-            return true;
-        if (hasTag(SelectorType.LEVEL, arg) && isWithinLevel(arg, e))
-            return true;
-        if (hasTag(SelectorType.TAG, arg) && isHasTags(arg, e))
-            return true;
-        if (hasTag(SelectorType.RYM, arg) && isRYM(arg, e))
-            return true;
-        if (hasTag(SelectorType.RXM, arg) && isRXM(arg, e))
-            return true;
-        if (hasTag(SelectorType.HM, arg) && isHM(arg, e))
-            return true;
-        if (hasTag(SelectorType.RY, arg) && isRY(arg, e))
-            return true;
-        if (hasTag(SelectorType.RX, arg) && isRX(arg, e))
-            return true;
-        if (hasTag(SelectorType.RM, arg) && isRM(arg, loc, e))
-            return true;
-        if (hasTag(SelectorType.LMax, arg) && isLM(arg, e))
-            return true;
-        if (hasTag(SelectorType.L, arg) && isL(arg, e))
-            return true;
-        if (hasTag(SelectorType.m, arg) && isM(arg, e))
-            return true;
-        if (hasTag(SelectorType.H, arg) && isH(arg, e))
-            return true;
-        if (hasTag(SelectorType.World, arg) && isW(arg, loc, e))
-            return true;
-        if (hasTag(SelectorType.R, arg) && isR(arg, loc, e))
-            return true;
-        if (hasTag(SelectorType.X, arg))
-            return true;
-        if (hasTag(SelectorType.Y, arg))
-            return true;
-        return hasTag(SelectorType.Z, arg);
+    private fun canBeAccepted(arg: String?, e: Entity, loc: Location?): Boolean {
+        if (hasTag(SelectorType.X_ROTATION, arg) && isWithinYaw(arg, e)) return true
+        if (hasTag(SelectorType.Y_ROTATION, arg) && isWithinPitch(arg, e)) return true
+        if (hasTag(SelectorType.TYPE, arg) && isType(arg, e)) return true
+        if (hasTag(SelectorType.NAME, arg) && isName(arg, e)) return true
+        if (hasTag(SelectorType.TEAM, arg) && isTeam(arg, e)) return true
+        if (hasTag(SelectorType.SCORE_FULL, arg) && isScore(arg, e)) return true
+        if (hasTag(SelectorType.SCORE_MIN, arg) && isScoreMin(arg, e)) return true
+        if (hasTag(SelectorType.SCORE_13, arg) && isScoreWithin(arg, e)) return true
+        if (hasTag(SelectorType.DISTANCE, arg) && isWithinDistance(arg, loc, e)) return true
+        if (hasTag(SelectorType.LEVEL, arg) && isWithinLevel(arg, e)) return true
+        if (hasTag(SelectorType.TAG, arg) && isHasTags(arg, e)) return true
+        if (hasTag(SelectorType.RYM, arg) && isRYM(arg, e)) return true
+        if (hasTag(SelectorType.RXM, arg) && isRXM(arg, e)) return true
+        if (hasTag(SelectorType.HM, arg) && isHM(arg, e)) return true
+        if (hasTag(SelectorType.RY, arg) && isRY(arg, e)) return true
+        if (hasTag(SelectorType.RX, arg) && isRX(arg, e)) return true
+        if (hasTag(SelectorType.RM, arg) && isRM(arg, loc, e)) return true
+        if (hasTag(SelectorType.LMax, arg) && isLM(arg, e)) return true
+        if (hasTag(SelectorType.L, arg) && isL(arg, e)) return true
+        if (hasTag(SelectorType.m, arg) && isM(arg, e)) return true
+        if (hasTag(SelectorType.H, arg) && isH(arg, e)) return true
+        if (hasTag(SelectorType.World, arg) && isW(arg, loc, e)) return true
+        if (hasTag(SelectorType.R, arg) && isR(arg, loc, e)) return true
+        if (hasTag(SelectorType.X, arg)) return true
+        return if (hasTag(SelectorType.Y, arg)) true else hasTag(SelectorType.Z, arg)
     }
 
-    private static String[] getTags(String arg) {
-        if (!arg.contains("["))
-            return new String[0];
-        String tags = arg.split("\\[")[1].split("\\]")[0];
-        return tags.split(",");
+    private fun getTags(arg: String): Array<String?> {
+        if (!arg.contains("[")) return arrayOfNulls(0)
+        val tags = arg.split("\\[".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1].split("\\]".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0]
+        return tags.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
     }
 
-    private static int mathIt(String args, int relInt) {
-        int total = 0;
-        short mode = 0;
-        String arg = args.replace("~", String.valueOf(relInt));
-        String intString = "";
-        for (int i = 0; i < arg.length(); i++) {
-            if (arg.charAt(i) == '+' || arg.charAt(i) == '-' || arg.charAt(i) == '*' || arg.charAt(i) == '/') {
+    private fun mathIt(args: String, relInt: Int): Int {
+        var total = 0
+        var mode: Int = 0
+        val arg = args.replace("~", relInt.toString())
+        var intString = ""
+        for (i in arg.indices) {
+            if (arg[i] == '+' || arg[i] == '-' || arg[i] == '*' || arg[i] == '/') {
                 try {
-                    switch (mode) {
-                        case 0:
-                            total = total + Integer.parseInt(intString);
-                            break;
-                        case 1:
-                            total = total - Integer.parseInt(intString);
-                            break;
-                        case 2:
-                            total = total * Integer.parseInt(intString);
-                            break;
-                        case 3:
-                            total = total / Integer.parseInt(intString);
-                            break;
+                    when (mode) {
+                        0 -> total += intString.toInt()
+                        1 -> total -= intString.toInt()
+                        2 -> total *= intString.toInt()
+                        3 -> total /= intString.toInt()
                     }
-                    mode = (short) ((arg.charAt(i) == '+') ? 0
-                            : ((arg.charAt(i) == '-') ? 1
-                            : ((arg.charAt(i) == '*') ? 2 : ((arg.charAt(i) == '/') ? 3 : -1))));
-                } catch (Exception e) {
-                    Bukkit.getLogger().severe("There has been an issue with a plugin using the CommandUtils class!");
+                    mode = (if (arg[i] == '+') 0 else if (arg[i] == '-') 1 else if (arg[i] == '*') 2 else if (arg[i] == '/') 3 else -1)
+                } catch (e: Exception) {
+                    Bukkit.getLogger().severe("There has been an issue with a plugin using the CommandUtils class!")
                 }
-
-            } else if (args.length() == i || arg.charAt(i) == ' ' || arg.charAt(i) == ',' || arg.charAt(i) == ']') {
+            } else if (args.length == i || arg[i] == ' ' || arg[i] == ',' || arg[i] == ']') {
                 try {
-                    switch (mode) {
-                        case 0:
-                            total = total + Integer.parseInt(intString);
-                            break;
-                        case 1:
-                            total = total - Integer.parseInt(intString);
-                            break;
-                        case 2:
-                            total = total * Integer.parseInt(intString);
-                            break;
-                        case 3:
-                            total = total / Integer.parseInt(intString);
-                            break;
+                    when (mode) {
+                        0 -> total = total + intString.toInt()
+                        1 -> total = total - intString.toInt()
+                        2 -> total = total * intString.toInt()
+                        3 -> total = total / intString.toInt()
                     }
-                } catch (Exception e) {
-                    Bukkit.getLogger().severe("There has been an issue with a plugin using the CommandUtils class!");
+                } catch (e: Exception) {
+                    Bukkit.getLogger().severe("There has been an issue with a plugin using the CommandUtils class!")
                 }
-                break;
+                break
             } else {
-                intString += arg.charAt(i);
+                intString += arg[i]
             }
         }
-        return total;
+        return total
     }
 
-    private static int getLimit(String arg) {
-        if (hasTag(SelectorType.LIMIT, arg))
-            for (String s : getTags(arg)) {
-                if (hasTag(SelectorType.LIMIT, s)) {
-                    return getInt(s);
-                }
+    private fun getLimit(arg: String): Int {
+        if (hasTag(SelectorType.LIMIT, arg)) for (s in getTags(arg)) {
+            if (hasTag(SelectorType.LIMIT, s)) {
+                return getInt(s)
             }
-        if (hasTag(SelectorType.C, arg))
-            for (String s : getTags(arg)) {
-                if (hasTag(SelectorType.C, s)) {
-                    return getInt(s);
-                }
+        }
+        if (hasTag(SelectorType.C, arg)) for (s in getTags(arg)) {
+            if (hasTag(SelectorType.C, s)) {
+                return getInt(s)
             }
-        return Integer.MAX_VALUE;
+        }
+        return Int.MAX_VALUE
     }
 
-    private static String getType(String arg) {
-        if (hasTag(SelectorType.TYPE, arg))
-            return arg.toLowerCase().split("=")[1].replace("!", "");
-        return "Player";
+    private fun getType(arg: String?): String {
+        return if (hasTag(SelectorType.TYPE, arg)) arg!!.lowercase(Locale.getDefault()).split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1].replace("!", "") else "Player"
     }
 
-    private static String getName(String arg) {
-        String reparg = arg.replace(" ", "_");
-        return reparg.replace("!", "").split("=")[1];
+    private fun getName(arg: String?): String? {
+        val reparg = arg!!.replace(" ", "_")
+        return reparg.replace("!", "").split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1]
     }
 
-    private static World getW(String arg) {
-        return Bukkit.getWorld(getString(arg));
+    private fun getW(arg: String?): World? {
+        return Bukkit.getWorld(getString(arg))
     }
 
-    private static String getScoreMinName(String arg) {
-        return arg.split("=")[0].substring(0, arg.split("=")[0].length() - 1 - 4).replace("score_", "");
+    private fun getScoreMinName(arg: String?): String {
+        return arg!!.split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0].substring(0, arg.split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0].length - 1 - 4).replace("score_", "")
     }
 
-    private static String getScoreName(String arg) {
-        return arg.split("=")[0].replace("score_", "");
+    private fun getScoreName(arg: String?): String {
+        return arg!!.split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0].replace("score_", "")
     }
 
-    private static String getTeam(String arg) {
-        return arg.toLowerCase().replace("!", "").split("=")[1];
+    private fun getTeam(arg: String?): String {
+        return arg!!.lowercase(Locale.getDefault()).replace("!", "").split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1]
     }
 
-    private static float getValueAsFloat(String arg) {
-        return Float.parseFloat(arg.replace("!", "").split("=")[1]);
+    private fun getValueAsFloat(arg: String?): Float {
+        return arg!!.replace("!", "").split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1].toFloat()
     }
 
-    private static int getValueAsInteger(String arg) {
-        return Integer.parseInt(arg.replace("!", "").split("=")[1]);
+    private fun getValueAsInteger(arg: String?): Int {
+        return arg!!.replace("!", "").split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1].toInt()
     }
 
-    private static GameMode getM(String arg) {
-        String[] split = arg.replace("!", "").toLowerCase().split("=");
-        String returnType = split[1];
-        if (returnType.equalsIgnoreCase("0") || returnType.equalsIgnoreCase("s")
-                || returnType.equalsIgnoreCase("survival"))
-            return GameMode.SURVIVAL;
-        if (returnType.equalsIgnoreCase("1") || returnType.equalsIgnoreCase("c")
-                || returnType.equalsIgnoreCase("creative"))
-            return GameMode.CREATIVE;
-        if (returnType.equalsIgnoreCase("2") || returnType.equalsIgnoreCase("a")
-                || returnType.equalsIgnoreCase("adventure"))
-            return GameMode.ADVENTURE;
-        if (returnType.equalsIgnoreCase("3") || returnType.equalsIgnoreCase("sp")
-                || returnType.equalsIgnoreCase("spectator"))
-            return GameMode.SPECTATOR;
-        return null;
+    private fun getM(arg: String?): GameMode? {
+        val split = arg!!.replace("!", "").lowercase(Locale.getDefault()).split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        val returnType = split[1]
+        if (returnType.equals("0", ignoreCase = true) || returnType.equals("s", ignoreCase = true)
+                || returnType.equals("survival", ignoreCase = true)) return GameMode.SURVIVAL
+        if (returnType.equals("1", ignoreCase = true) || returnType.equals("c", ignoreCase = true)
+                || returnType.equals("creative", ignoreCase = true)) return GameMode.CREATIVE
+        if (returnType.equals("2", ignoreCase = true) || returnType.equals("a", ignoreCase = true)
+                || returnType.equals("adventure", ignoreCase = true)) return GameMode.ADVENTURE
+        return if (returnType.equals("3", ignoreCase = true) || returnType.equals("sp", ignoreCase = true)
+                || returnType.equals("spectator", ignoreCase = true)) GameMode.SPECTATOR else null
     }
 
-    private static List<World> getAcceptedWorldsFullString(Location loc, String fullString) {
-        String string = null;
-        for (String tag : getTags(fullString)) {
+    private fun getAcceptedWorldsFullString(loc: Location?, fullString: String): List<World?> {
+        var string: String? = null
+        for (tag in getTags(fullString)) {
             if (hasTag(SelectorType.World, tag)) {
-                string = tag;
-                break;
+                string = tag
+                break
             }
         }
         if (string == null) {
-            List<World> worlds = new ArrayList<World>();
-            if (loc == null || loc.getWorld() == null) {
-                worlds.addAll(Bukkit.getWorlds());
+            val worlds: MutableList<World?> = ArrayList()
+            if (loc == null || loc.world == null) {
+                worlds.addAll(Bukkit.getWorlds())
             } else {
-                worlds.add(loc.getWorld());
+                worlds.add(loc.world)
             }
-            return worlds;
+            return worlds
         }
-        return getAcceptedWorlds(string);
+        return getAcceptedWorlds(string)
     }
 
-    private static List<World> getAcceptedWorlds(String string) {
-        List<World> worlds = new ArrayList<World>(Bukkit.getWorlds());
+    private fun getAcceptedWorlds(string: String?): List<World?> {
+        val worlds: MutableList<World?> = ArrayList(Bukkit.getWorlds())
         if (isInverted(string)) {
-            worlds.remove(getW(string));
+            worlds.remove(getW(string))
         } else {
-            worlds.clear();
-            worlds.add(getW(string));
+            worlds.clear()
+            worlds.add(getW(string))
         }
-        return worlds;
+        return worlds
     }
 
-    private static boolean isTeam(String arg, Entity e) {
-        if (!(e instanceof Player))
-            return false;
-        for (Team t : Bukkit.getScoreboardManager().getMainScoreboard().getTeams()) {
-            if ((t.getName().equalsIgnoreCase(getTeam(arg)) != isInverted(arg))) {
-                if ((t.getEntries().contains(e.getName()) != isInverted(arg)))
-                    return true;
+    private fun isTeam(arg: String?, e: Entity): Boolean {
+        if (e !is Player) return false
+        for (t in Bukkit.getScoreboardManager()!!.mainScoreboard.teams) {
+            if (t.name.equals(getTeam(arg), ignoreCase = true) != isInverted(arg)) {
+                if (t.entries.contains(e.getName()) != isInverted(arg)) return true
             }
         }
-        return false;
+        return false
     }
 
-    private static boolean isWithinPitch(String arg, Entity e) {
-        float pitch = getValueAsFloat(arg);
-        return isWithinDoubleValue(isInverted(arg), arg, e.getLocation().getPitch());
+    private fun isWithinPitch(arg: String?, e: Entity): Boolean {
+        val pitch = getValueAsFloat(arg)
+        return isWithinDoubleValue(isInverted(arg), arg, e.location.pitch.toDouble())
     }
 
-    private static boolean isWithinYaw(String arg, Entity e) {
-        float pitch = getValueAsFloat(arg);
-        return isWithinDoubleValue(isInverted(arg), arg, e.getLocation().getYaw());
+    private fun isWithinYaw(arg: String?, e: Entity): Boolean {
+        val pitch = getValueAsFloat(arg)
+        return isWithinDoubleValue(isInverted(arg), arg, e.location.yaw.toDouble())
     }
 
-    private static boolean isWithinDistance(String arg, Location start, Entity e) {
-        double distanceMin = 0;
-        double distanceMax = Double.MAX_VALUE;
-        String distance = arg.split("=")[1];
-        if (e.getLocation().getWorld() != start.getWorld())
-            return false;
-        if (distance.contains("..")) {
-            String[] temp = distance.split("\\.\\.");
+    private fun isWithinDistance(arg: String?, start: Location?, e: Entity): Boolean {
+        var distanceMin = 0.0
+        var distanceMax = Double.MAX_VALUE
+        val distance = arg!!.split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1]
+        if (e.location.world !== start!!.world) return false
+        return if (distance.contains("..")) {
+            val temp = distance.split("\\.\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
             if (!temp[0].isEmpty()) {
-                distanceMin = Integer.parseInt(temp[0]);
+                distanceMin = temp[0].toInt().toDouble()
             }
-            if (temp.length > 1 && !temp[1].isEmpty()) {
-                distanceMax = Double.parseDouble(temp[1]);
+            if (temp.size > 1 && !temp[1].isEmpty()) {
+                distanceMax = temp[1].toDouble()
             }
-            double actDis = start.distanceSquared(e.getLocation());
-            return actDis <= distanceMax * distanceMax && distanceMin * distanceMin <= actDis;
+            val actDis = start!!.distanceSquared(e.location)
+            actDis <= distanceMax * distanceMax && distanceMin * distanceMin <= actDis
         } else {
-            int mult = Integer.parseInt(distance);
-            mult *= mult;
-            return ((int) start.distanceSquared(e.getLocation())) == mult;
+            var mult = distance.toInt()
+            mult *= mult
+            start!!.distanceSquared(e.location).toInt() == mult
         }
     }
 
-    private static boolean isWithinLevel(String arg, Entity e) {
-        if (!(e instanceof Player))
-            return false;
-        double distanceMin = 0;
-        double distanceMax = Double.MAX_VALUE;
-        String distance = arg.split("=")[1];
-        if (distance.contains("..")) {
-            String[] temp = distance.split("..");
-            if (!temp[0].isEmpty()) {
-                distanceMin = Integer.parseInt(temp[0]);
+    private fun isWithinLevel(arg: String?, e: Entity): Boolean {
+        if (e !is Player) return false
+        var distanceMin = 0.0
+        var distanceMax = Double.MAX_VALUE
+        val distance = arg!!.split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1]
+        return if (distance.contains("..")) {
+            val temp: Array<String?> = distance.split("..".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            if (!temp[0]!!.isEmpty()) {
+                distanceMin = temp[0]!!.toInt().toDouble()
             }
-            if (temp[1] != null && !temp[1].isEmpty()) {
-                distanceMax = Double.parseDouble(temp[1]);
+            if (temp[1] != null && !temp[1]!!.isEmpty()) {
+                distanceMax = temp[1]!!.toDouble()
             }
-            double actDis = ((Player) e).getExpToLevel();
-            return actDis <= distanceMax * distanceMax && distanceMin * distanceMin <= actDis;
+            val actDis = e.expToLevel.toDouble()
+            actDis <= distanceMax * distanceMax && distanceMin * distanceMin <= actDis
         } else {
-            return ((Player) e).getExpToLevel() == Integer.parseInt(distance);
+            e.expToLevel == distance.toInt()
         }
     }
 
-    private static boolean isScore(String arg, Entity e) {
-        if (!(e instanceof Player))
-            return false;
-        for (Objective o : Bukkit.getScoreboardManager().getMainScoreboard().getObjectives()) {
-            if (o.getName().equalsIgnoreCase(getScoreName(arg))) {
-                if ((o.getScore(e.getName()).getScore() <= getValueAsInteger(arg) != isInverted(arg)))
-                    return true;
+    private fun isScore(arg: String?, e: Entity): Boolean {
+        if (e !is Player) return false
+        for (o in Bukkit.getScoreboardManager()!!.mainScoreboard.objectives) {
+            if (o.name.equals(getScoreName(arg), ignoreCase = true)) {
+                if (o.getScore(e.getName()).score <= getValueAsInteger(arg) != isInverted(arg)) return true
             }
         }
-        return false;
+        return false
     }
 
-    private static boolean isScoreWithin(String arg, Entity e) {
-        if (!(e instanceof Player))
-            return false;
-        String[] scores = arg.split("\\{")[1].split("\\}")[0].split(",");
-        for (int i = 0; i < scores.length; i++) {
-            String[] s = scores[i].split("=");
-            String name = s[0];
-
-            for (Objective o : Bukkit.getScoreboardManager().getMainScoreboard().getObjectives()) {
-                if (o.getName().equalsIgnoreCase(name)) {
-                    if (!isWithinDoubleValue(isInverted(arg), s[1], o.getScore(e.getName()).getScore()))
-                        return false;
+    private fun isScoreWithin(arg: String?, e: Entity): Boolean {
+        if (e !is Player) return false
+        val scores = arg!!.split("\\{".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1].split("\\}".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0].split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        for (i in scores.indices) {
+            val s = scores[i].split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            val name = s[0]
+            for (o in Bukkit.getScoreboardManager()!!.mainScoreboard.objectives) {
+                if (o.name.equals(name, ignoreCase = true)) {
+                    if (!isWithinDoubleValue(isInverted(arg), s[1], o.getScore(e.getName()).score.toDouble())) return false
                 }
             }
         }
-        return true;
-
+        return true
     }
 
-    private static boolean isHasTags(String arg, Entity e) {
-        if (!(e instanceof Player))
-            return false;
-        return isInverted(arg) != e.getScoreboardTags().contains(getString(arg));
-
+    private fun isHasTags(arg: String?, e: Entity): Boolean {
+        return if (e !is Player) false else isInverted(arg) != e.getScoreboardTags().contains(getString(arg))
     }
 
-    private static boolean isScoreMin(String arg, Entity e) {
-        if (!(e instanceof Player))
-            return false;
-        for (Objective o : Bukkit.getScoreboardManager().getMainScoreboard().getObjectives()) {
-            if (o.getName().equalsIgnoreCase(getScoreMinName(arg))) {
-                if ((o.getScore(e.getName()).getScore() >= getValueAsInteger(arg) != isInverted(arg)))
-                    return true;
+    private fun isScoreMin(arg: String?, e: Entity): Boolean {
+        if (e !is Player) return false
+        for (o in Bukkit.getScoreboardManager()!!.mainScoreboard.objectives) {
+            if (o.name.equals(getScoreMinName(arg), ignoreCase = true)) {
+                if (o.getScore(e.getName()).score >= getValueAsInteger(arg) != isInverted(arg)) return true
             }
         }
-        return false;
+        return false
     }
 
-    private static boolean isRM(String arg, Location loc, Entity e) {
-        if (loc.getWorld() != e.getWorld())
-            return false;
-        return isGreaterThan(arg, loc.distance(e.getLocation()));
+    private fun isRM(arg: String?, loc: Location?, e: Entity): Boolean {
+        return if (loc!!.world !== e.world) false else isGreaterThan(arg, loc!!.distance(e.location))
     }
 
-    private static boolean isR(String arg, Location loc, Entity e) {
-        if (loc.getWorld() != e.getWorld())
-            return false;
-        return isLessThan(arg, loc.distance(e.getLocation()));
-
+    private fun isR(arg: String?, loc: Location?, e: Entity): Boolean {
+        return if (loc!!.world !== e.world) false else isLessThan(arg, loc!!.distance(e.location))
     }
 
-    private static boolean isRXM(String arg, Entity e) {
-        return isLessThan(arg, e.getLocation().getYaw());
+    private fun isRXM(arg: String?, e: Entity): Boolean {
+        return isLessThan(arg, e.location.yaw.toDouble())
     }
 
-    private static boolean isRX(String arg, Entity e) {
-        return isGreaterThan(arg, e.getLocation().getYaw());
+    private fun isRX(arg: String?, e: Entity): Boolean {
+        return isGreaterThan(arg, e.location.yaw.toDouble())
     }
 
-    private static boolean isRYM(String arg, Entity e) {
-        return isLessThan(arg, e.getLocation().getPitch());
+    private fun isRYM(arg: String?, e: Entity): Boolean {
+        return isLessThan(arg, e.location.pitch.toDouble())
     }
 
-    private static boolean isRY(String arg, Entity e) {
-        return isGreaterThan(arg, e.getLocation().getPitch());
+    private fun isRY(arg: String?, e: Entity): Boolean {
+        return isGreaterThan(arg, e.location.pitch.toDouble())
     }
 
-    private static boolean isL(String arg, Entity e) {
-        if (e instanceof Player) {
-            isLessThan(arg, ((Player) e).getTotalExperience());
+    private fun isL(arg: String?, e: Entity): Boolean {
+        if (e is Player) {
+            isLessThan(arg, e.totalExperience.toDouble())
         }
-        return false;
+        return false
     }
 
-    private static boolean isLM(String arg, Entity e) {
-        if (e instanceof Player) {
-            return isGreaterThan(arg, ((Player) e).getTotalExperience());
-        }
-        return false;
+    private fun isLM(arg: String?, e: Entity): Boolean {
+        return if (e is Player) {
+            isGreaterThan(arg, e.totalExperience.toDouble())
+        } else false
     }
 
-    private static boolean isH(String arg, Entity e) {
-        if (e instanceof Damageable)
-            return isGreaterThan(arg, ((Damageable) e).getHealth());
-        return false;
+    private fun isH(arg: String?, e: Entity): Boolean {
+        return if (e is Damageable) isGreaterThan(arg, e.health) else false
     }
 
-    private static boolean isHM(String arg, Entity e) {
-        if (e instanceof Damageable)
-            return isLessThan(arg, ((Damageable) e).getHealth());
-        return false;
+    private fun isHM(arg: String?, e: Entity): Boolean {
+        return if (e is Damageable) isLessThan(arg, e.health) else false
     }
 
-    private static boolean isM(String arg, Entity e) {
-        if (getM(arg) == null)
-            return true;
-        if (e instanceof HumanEntity) {
-            return isInverted(arg) != (getM(arg) == ((HumanEntity) e).getGameMode());
-        }
-        return false;
+    private fun isM(arg: String?, e: Entity): Boolean {
+        if (getM(arg) == null) return true
+        return if (e is HumanEntity) {
+            isInverted(arg) != (getM(arg) == e.gameMode)
+        } else false
     }
 
-    private static boolean isW(String arg, Location loc, Entity e) {
-        if (getW(arg) == null) {
-            return true;
-        } else return isInverted(arg) != getAcceptedWorlds(arg).contains(getW(arg));
+    private fun isW(arg: String?, loc: Location?, e: Entity): Boolean {
+        return if (getW(arg) == null) {
+            true
+        } else isInverted(arg) != getAcceptedWorlds(arg).contains(getW(arg))
     }
 
-    private static boolean isName(String arg, Entity e) {
-        if (getName(arg) == null)
-            return true;
-        return isInverted(arg) == (e.getCustomName() == null) && isInverted(arg) != (getName(arg)
-                .equals(e.getCustomName().replace(" ", "_"))
-                || (e instanceof Player && e.getName().replace(" ", "_").equalsIgnoreCase(getName(arg))));
+    private fun isName(arg: String?, e: Entity): Boolean {
+        return if (getName(arg) == null) true else isInverted(arg) == (e.customName == null) && isInverted(arg) != ((getName(arg)
+                == e.customName!!.replace(" ", "_")) || e is Player && e.getName().replace(" ", "_").equals(getName(arg), ignoreCase = true))
     }
 
-    private static boolean isType(String arg, Entity e) {
-        boolean invert = isInverted(arg);
-        String type = getType(arg);
-        return invert != e.getType().name().equalsIgnoreCase(type);
-
+    private fun isType(arg: String?, e: Entity): Boolean {
+        val invert = isInverted(arg)
+        val type = getType(arg)
+        return invert != e.type.name.equals(type, ignoreCase = true)
     }
 
-    private static boolean isInverted(String arg) {
-        return arg.toLowerCase().split("!").length != 1;
+    private fun isInverted(arg: String?): Boolean {
+        return arg!!.lowercase(Locale.getDefault()).split("!".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray().size != 1
     }
 
-    private static int getInt(String arg) {
-        int mult = Integer.parseInt(arg.split("=")[1]);
-        return mult;
+    private fun getInt(arg: String?): Int {
+        return arg!!.split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray<String>()[1].toInt()
     }
 
-    public static String getString(String arg) {
-        return arg.split("=")[1].replaceAll("!", "");
+    private fun getString(arg: String?): String {
+        return arg!!.split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1].replace("!".toRegex(), "")
     }
 
-    private static boolean isLessThan(String arg, double value) {
-        boolean inverted = isInverted(arg);
-        double mult = Double.parseDouble(arg.split("=")[1]);
-        return (value < mult) != inverted;
+    private fun isLessThan(arg: String?, value: Double): Boolean {
+        val inverted = isInverted(arg)
+        val mult = arg!!.split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1].toDouble()
+        return value < mult != inverted
     }
 
-    private static boolean isGreaterThan(String arg, double value) {
-        boolean inverted = isInverted(arg);
-        double mult = Double.parseDouble(arg.split("=")[1]);
-        return (value > mult) != inverted;
+    private fun isGreaterThan(arg: String?, value: Double): Boolean {
+        val inverted = isInverted(arg)
+        val mult = arg!!.split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1].toDouble()
+        return value > mult != inverted
     }
 
-    private static boolean isWithinDoubleValue(boolean inverted, String arg, double value) {
-        double min = -Double.MAX_VALUE;
-        double max = Double.MAX_VALUE;
-        if (arg.contains("..")) {
-            String[] temp = arg.split("\\.\\.");
-            if (!temp[0].isEmpty()) {
-                min = Integer.parseInt(temp[0]);
+    private fun isWithinDoubleValue(inverted: Boolean, arg: String?, value: Double): Boolean {
+        var min = -Double.MAX_VALUE
+        var max = Double.MAX_VALUE
+        return if (arg!!.contains("..")) {
+            val temp = arg.split("\\.\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            if (temp[0].isNotEmpty()) {
+                min = temp[0].toInt().toDouble()
             }
-            if (temp.length > 1 && !temp[1].isEmpty()) {
-                max = Double.parseDouble(temp[1]);
+            if (temp.size > 1 && temp[1].isNotEmpty()) {
+                max = temp[1].toDouble()
             }
-            return (value <= max * max && min * min <= value) != inverted;
+            (value <= max * max && min * min <= value) != inverted
         } else {
-            double mult = Double.parseDouble(arg);
-            return (value == mult) != inverted;
+            val mult = arg.toDouble()
+            value == mult != inverted
         }
     }
 
-    private static boolean hasTag(SelectorType type, String arg) {
-        return arg.toLowerCase().startsWith(type.getName());
+    private fun hasTag(type: SelectorType, arg: String?): Boolean {
+        return arg!!.lowercase(Locale.getDefault()).startsWith(type.stringName)
     }
 
-    enum SelectorType {
-        LEVEL("level="), DISTANCE("distance="), TYPE("type="), NAME("name="), TEAM("team="), LMax("lm="), L(
-                "l="), World("w="), m("m="), C("c="), HM("hm="), H("h="), RM("rm="), RYM("rym="), RX("rx="), SCORE_FULL(
-                "score="), SCORE_MIN("score_min"), SCORE_13(
-                "scores="), R("r="), RXM("rxm="), RY("ry="), TAG("tag="), X("x="), Y("y="), Z("z="), LIMIT("limit="), Y_ROTATION("y_rotation"), X_ROTATION("x_rotation");
-        String name;
+    internal enum class SelectorType(var stringName: String) {
+        LEVEL("level="),
+        DISTANCE("distance="),
+        TYPE("type="),
+        NAME("name="),
+        TEAM("team="),
+        LMax("lm="),
+        L(
+                "l="),
+        World("w="),
+        m("m="),
+        C("c="),
+        HM("hm="),
+        H("h="),
+        RM("rm="),
+        RYM("rym="),
+        RX("rx="),
+        SCORE_FULL(
+                "score="),
+        SCORE_MIN("score_min"),
+        SCORE_13(
+                "scores="),
+        R("r="),
+        RXM("rxm="),
+        RY("ry="),
+        TAG("tag="),
+        X("x="),
+        Y("y="),
+        Z("z="),
+        LIMIT("limit="),
+        Y_ROTATION("y_rotation"),
+        X_ROTATION("x_rotation")
 
-        SelectorType(String s) {
-            this.name = s;
-        }
-
-        public String getName() {
-            return name;
-        }
     }
 }

@@ -1,56 +1,47 @@
-package me.partlysunny.util.classes.gear;
+package me.partlysunny.util.classes.gear
 
-import com.google.common.base.Preconditions;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.inventory.EntityEquipment;
-import org.bukkit.inventory.ItemStack;
+import com.google.common.base.Preconditions
+import org.bukkit.entity.LivingEntity
+import org.bukkit.inventory.ItemStack
+import java.util.*
 
-import java.util.Arrays;
+class MobGear private constructor() {
+    private var offHand: ItemStack? = null
+    private var armor: Array<ItemStack?>? = arrayOfNulls(4)
 
-public class MobGear {
-
-    private ItemStack offHand = null;
-    private ItemStack[] armor = new ItemStack[4];
-
-    private MobGear() {
-        Arrays.fill(armor, null);
+    init {
+        armor?.let { Arrays.fill(it, null) }
     }
 
-    public void equip(LivingEntity e) {
-        Preconditions.checkArgument(armor != null, "Armor is null");
-        Preconditions.checkArgument(armor.length == 4, "Armor is not length 4");
-
-        EntityEquipment equipment = e.getEquipment();
-        equipment.setArmorContents(armor);
-        equipment.setItemInOffHand(offHand);
+    fun equip(e: LivingEntity) {
+        Preconditions.checkArgument(armor != null, "Armor is null")
+        Preconditions.checkArgument(armor!!.size == 4, "Armor is not length 4")
+        val equipment = e.equipment
+        equipment!!.armorContents = armor!!
+        equipment.setItemInOffHand(offHand)
     }
 
-    public static final class Builder {
+    class Builder {
+        private val internal: MobGear = MobGear()
 
-        private final MobGear internal;
-
-        public Builder() {
-            internal = new MobGear();
+        fun setOffHand(i: ItemStack?): Builder {
+            internal.offHand = i
+            return this
         }
 
-        public static Builder builder() {
-            return new Builder();
+        fun setArmor(vararg i: ItemStack?): Builder {
+            internal.armor = arrayOf(*i)
+            return this
         }
 
-        public Builder setOffHand(ItemStack i) {
-            internal.offHand = i;
-            return this;
+        fun build(): MobGear {
+            return internal
         }
 
-        public Builder setArmor(ItemStack... i) {
-            internal.armor = i;
-            return this;
+        companion object {
+            fun builder(): Builder {
+                return Builder()
+            }
         }
-
-        public MobGear build() {
-            return internal;
-        }
-
     }
-
 }

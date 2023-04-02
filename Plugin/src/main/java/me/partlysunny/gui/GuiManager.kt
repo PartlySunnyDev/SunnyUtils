@@ -1,47 +1,35 @@
-package me.partlysunny.gui;
+package me.partlysunny.gui
 
-import org.bukkit.entity.Player;
+import org.bukkit.entity.Player
+import java.util.*
 
-import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-public class GuiManager {
-
-    private static final Map<String, GuiInstance> guis = new HashMap<>();
-    private static final Map<UUID, String> previousGuis = new HashMap<>();
-    private static final Map<UUID, String> currentGuis = new HashMap<>();
-
-    public static void openInventory(Player p, String id) {
-        GuiInstance guiInstance = guis.get(id);
-        if (guiInstance == null) {
-            return;
-        }
-        UUID uniqueId = p.getUniqueId();
+object GuiManager {
+    private val guis: MutableMap<String?, GuiInstance> = HashMap()
+    private val previousGuis: MutableMap<UUID, String?> = HashMap()
+    private val currentGuis: MutableMap<UUID, String?> = HashMap()
+    fun openInventory(p: Player, id: String?) {
+        val guiInstance = guis[id] ?: return
+        val uniqueId = p.uniqueId
         if (currentGuis.containsKey(uniqueId)) {
-            previousGuis.put(uniqueId, currentGuis.get(uniqueId));
+            previousGuis[uniqueId] = currentGuis[uniqueId]
         }
-        currentGuis.put(uniqueId, id);
-        guiInstance.openFor(p);
+        currentGuis[uniqueId] = id
+        guiInstance.openFor(p)
     }
 
-    public static void registerGui(String id, GuiInstance gui) {
-        guis.put(id, gui);
+    fun registerGui(id: String?, gui: GuiInstance) {
+        guis[id] = gui
     }
 
-    public static void unregisterGui(String id) {
-        guis.remove(id);
+    fun unregisterGui(id: String?) {
+        guis.remove(id)
     }
 
-    @Nullable
-    public static String getPreviousGui(UUID player) {
-        return previousGuis.get(player);
+    fun getPreviousGui(player: UUID): String? {
+        return previousGuis[player]
     }
 
-    @Nullable
-    public static String getCurrentGui(UUID player) {
-        return currentGuis.get(player);
+    fun getCurrentGui(player: UUID): String? {
+        return currentGuis[player]
     }
-
 }

@@ -1,241 +1,239 @@
-package me.partlysunny.util.classes.predicates;
+package me.partlysunny.util.classes.predicates
 
-import com.google.common.base.Preconditions;
-import me.partlysunny.util.classes.builders.HashMapBuilder;
-import me.partlysunny.util.classes.predicates.relationships.PredicateRelationship;
-import me.partlysunny.util.classes.predicates.relationships.Relationship;
-import org.junit.Assert;
-import org.junit.Test;
+import com.google.common.base.Preconditions
+import me.partlysunny.util.classes.builders.HashMapBuilder
+import me.partlysunny.util.classes.predicates.relationships.PredicateRelationship
+import me.partlysunny.util.classes.predicates.relationships.Relationship
+import org.junit.Assert
+import org.junit.Test
+import java.lang.reflect.InvocationTargetException
+import java.util.*
+import java.util.function.BiFunction
+import java.util.stream.Collectors
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Stack;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
+class CheckerPredicate(private val predicate: String) {
+    private val chunks: List<String>
 
-public class CheckerPredicate {
-
-    public static final CheckerPredicate TRUE = new CheckerPredicate("true");
-    public static final CheckerPredicate FALSE = new CheckerPredicate("false");
-    private final String predicate;
-    private final List<String> chunks;
-    public CheckerPredicate(String s) {
-        this.predicate = s;
-        this.chunks = chunk();
-        checkValid();
+    init {
+        chunks = chunk()
+        checkValid()
     }
 
-    public static CheckerPredicate from(boolean b) {
-        return b ? TRUE : FALSE;
-    }
-
-    private void checkValid() {
+    private fun checkValid() {
         //Check brackets
-        Preconditions.checkArgument(isBracketReady(), "Predicate %s is not bracket ready!".formatted(predicate));
+        Preconditions.checkArgument(isBracketReady, "Predicate %s is not bracket ready!".formatted(predicate))
         //Check chunks
-        Preconditions.checkArgument(chunks.size() % 2 == 1, "Invalid predicate %s, chunks must have odd length: Chunks are: %s".formatted(predicate, chunks));
-        for (int i = 0; i < chunks.size(); i++) {
-            String chunk = chunks.get(i);
+        Preconditions.checkArgument(chunks.size % 2 == 1, "Invalid predicate %s, chunks must have odd length: Chunks are: %s".formatted(predicate, chunks))
+        for (i in chunks.indices) {
+            val chunk = chunks[i]
             if (i % 2 == 1) {
                 try {
-                    Relationship.valueOf(chunk);
-                } catch (Exception e) {
-                    throw new IllegalArgumentException("All predicate joiners must be %s, Found: %s".formatted(Arrays.toString(Relationship.values()), chunk));
+                    Relationship.valueOf(chunk)
+                } catch (e: Exception) {
+                    throw IllegalArgumentException("All predicate joiners must be %s, Found: %s".formatted(Arrays.toString(Relationship.values()), chunk))
                 }
             }
         }
     }
 
-    private boolean isBracketReady() {
-        Stack<Boolean> stack = new Stack<>();
-        for (int i = 0; i < predicate.length(); i++) {
-            if (predicate.charAt(i) == '(') {
-                stack.push(true);
-            } else if (predicate.charAt(i) == ')') {
-                if (stack.empty()) return false;
-                stack.pop();
+    private val isBracketReady: Boolean
+        private get() {
+            val stack = Stack<Boolean>()
+            for (i in 0 until predicate.length) {
+                if (predicate[i] == '(') {
+                    stack.push(true)
+                } else if (predicate[i] == ')') {
+                    if (stack.empty()) return false
+                    stack.pop()
+                }
             }
+            return stack.empty()
         }
-        return stack.empty();
-    }
 
-    private List<String> chunk() {
-        List<String> chunks = new ArrayList<>();
-        Stack<Integer> brackets = new Stack<>();
-
-        int start = 0;
-        for (int i = 0; i < predicate.length(); i++) {
-            char c = predicate.charAt(i);
+    private fun chunk(): List<String> {
+        var chunks: MutableList<String> = ArrayList()
+        val brackets = Stack<Int>()
+        var start = 0
+        var i = 0
+        while (i < predicate.length) {
+            val c = predicate[i]
             if (c == '(') {
-                brackets.push(i);
+                brackets.push(i)
             } else if (c == ')') {
-                int startBracket = brackets.pop();
+                val startBracket = brackets.pop()
                 if (brackets.empty()) {
-                    chunks.add(predicate.substring(startBracket + 1, i));
-                    start = i + 2;
+                    chunks.add(predicate.substring(startBracket + 1, i))
+                    start = i + 2
                 }
             }
-            for (Relationship r : Relationship.values()) {
-                String name = r.toString();
-                if (c == name.charAt(0) && i < predicate.length() - name.length() && i > 0) {
-                    String next = predicate.substring(i - 1, i + name.length() + 1);
-                    if (next.equals(" " + name + " ")) {
+            for (r in Relationship.values()) {
+                val name = r.toString()
+                if (c == name[0] && i < predicate.length - name.length && i > 0) {
+                    val next = predicate.substring(i - 1, i + name.length + 1)
+                    if (next == " $name ") {
                         if (!brackets.empty()) {
-                            continue;
+                            continue
                         }
-                        if (start != i) chunks.add(predicate.substring(start, i));
-                        chunks.add(next);
-                        start = i + name.length();
-                        i += name.length() - 1;
+                        if (start != i) chunks.add(predicate.substring(start, i))
+                        chunks.add(next)
+                        start = i + name.length
+                        i += name.length - 1
                     }
                 }
             }
-
+            i++
         }
-        if (start < predicate.length()) {
+        if (start < predicate.length) {
             if (!brackets.empty()) {
-                chunks.add(predicate.substring(brackets.pop()));
+                chunks.add(predicate.substring(brackets.pop()))
             } else {
-                chunks.add(predicate.substring(start));
+                chunks.add(predicate.substring(start))
             }
         }
-        chunks = chunks.stream().map(String::trim).collect(Collectors.toList());
-        return chunks;
+        chunks = chunks.stream().map { obj: String -> obj.trim { it <= ' ' } }.collect(Collectors.toList())
+        return chunks
     }
 
-    private String processTermWithContext(PredicateContext ctx, String term) {
-        if (term.length() == 0) return term;
-        if (term.startsWith("?")) {
-            return ctx.get(term.substring(1));
-        }
-        return term;
+    private fun processTermWithContext(ctx: PredicateContext, term: String): String? {
+        if (term.length == 0) return term
+        return if (term.startsWith("?")) {
+            ctx[term.substring(1)]
+        } else term
     }
 
-    public boolean process(PredicateContext ctx) {
-
-        if (chunks.size() == 1) {
-            String expression = chunks.get(0);
+    fun process(ctx: PredicateContext): Boolean {
+        if (chunks.size == 1) {
+            val expression = chunks[0]
             //Process the one chunk
             //"true" or "false"
-            if (expression.equals("true")) {
-                return true;
-            } else if (expression.equals("false")) {
-                return false;
+            if (expression == "true") {
+                return true
+            } else if (expression == "false") {
+                return false
             }
-            String[] expressionItems = expression.split(" ++");
-            if (expressionItems.length == 3) {
-                String term1 = processTermWithContext(ctx, expressionItems[0]);
-                String operator = expressionItems[1];
-                String term2 = processTermWithContext(ctx, expressionItems[2]);
+            val expressionItems = expression.split(" ++".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            if (expressionItems.size == 3) {
+                val term1 = processTermWithContext(ctx, expressionItems[0])
+                val operator = expressionItems[1]
+                val term2 = processTermWithContext(ctx, expressionItems[2])
+                when (operator) {
+                    "=" -> {
+                        var stringEquals = term1 == term2
+                        if (!stringEquals) {
+                            try {
+                                stringEquals = term1!!.toDouble() == term2!!.toDouble()
+                            } catch (ignored: NumberFormatException) {
+                            }
+                        }
+                        return stringEquals
+                    }
 
-                switch (operator) {
-                    case "=" -> {
-                        boolean stringEquals = term1.equals(term2);
+                    "!=" -> {
+                        var stringEquals = term1 != term2
                         if (!stringEquals) {
                             try {
-                                stringEquals = Double.parseDouble(term1) == (Double.parseDouble(term2));
-                            } catch (NumberFormatException ignored) {
+                                stringEquals = term1!!.toDouble() != term2!!.toDouble()
+                            } catch (ignored: NumberFormatException) {
                             }
                         }
-                        return stringEquals;
+                        return stringEquals
                     }
-                    case "!=" -> {
-                        boolean stringEquals = !term1.equals(term2);
-                        if (!stringEquals) {
-                            try {
-                                stringEquals = Double.parseDouble(term1) != (Double.parseDouble(term2));
-                            } catch (NumberFormatException ignored) {
-                            }
-                        }
-                        return stringEquals;
-                    }
-                    case ">" -> {
-                        try {
-                            return Double.parseDouble(term1) > (Double.parseDouble(term2));
-                        } catch (NumberFormatException ignored) {
-                            throw new IllegalArgumentException("Left and right terms must both be parsable doubles in expression %s".formatted(expression));
+
+                    ">" -> {
+                        return try {
+                            term1!!.toDouble() > term2!!.toDouble()
+                        } catch (ignored: NumberFormatException) {
+                            throw IllegalArgumentException("Left and right terms must both be parsable doubles in expression %s".formatted(expression))
                         }
                     }
-                    case "<" -> {
-                        try {
-                            return Double.parseDouble(term1) < (Double.parseDouble(term2));
-                        } catch (NumberFormatException ignored) {
-                            throw new IllegalArgumentException("Left and right terms must both be parsable doubles in expression %s".formatted(expression));
+
+                    "<" -> {
+                        return try {
+                            term1!!.toDouble() < term2!!.toDouble()
+                        } catch (ignored: NumberFormatException) {
+                            throw IllegalArgumentException("Left and right terms must both be parsable doubles in expression %s".formatted(expression))
                         }
                     }
-                    case ">=" -> {
-                        try {
-                            return Double.parseDouble(term1) >= (Double.parseDouble(term2));
-                        } catch (NumberFormatException ignored) {
-                            throw new IllegalArgumentException("Left and right terms must both be parsable doubles in expression %s".formatted(expression));
+
+                    ">=" -> {
+                        return try {
+                            term1!!.toDouble() >= term2!!.toDouble()
+                        } catch (ignored: NumberFormatException) {
+                            throw IllegalArgumentException("Left and right terms must both be parsable doubles in expression %s".formatted(expression))
                         }
                     }
-                    case "<=" -> {
-                        try {
-                            return Double.parseDouble(term1) <= (Double.parseDouble(term2));
-                        } catch (NumberFormatException ignored) {
-                            throw new IllegalArgumentException("Left and right terms must both be parsable doubles in expression %s".formatted(expression));
+
+                    "<=" -> {
+                        return try {
+                            term1!!.toDouble() <= term2!!.toDouble()
+                        } catch (ignored: NumberFormatException) {
+                            throw IllegalArgumentException("Left and right terms must both be parsable doubles in expression %s".formatted(expression))
                         }
                     }
                 }
             }
-            throw new IllegalArgumentException("Invalid expression found in predicate! %s".formatted(expression));
+            throw IllegalArgumentException("Invalid expression found in predicate! %s".formatted(expression))
         }
-
-        PredicateRelationship endRelationship = null;
-        for (int i = 0; i < chunks.size(); i++) {
-            String item = chunks.get(i);
+        var endRelationship: PredicateRelationship? = null
+        for (i in chunks.indices) {
+            val item = chunks[i]
             //If the variable "i" is even then it is an operator, otherwise it's an expression
             if (i % 2 == 1) {
-                BiFunction<CheckerPredicate, CheckerPredicate, PredicateRelationship> operationProcessor = (a, b) -> {
-                    for (Relationship r : Relationship.values()) {
-                        if (item.equals(r.toString())) {
+                val operationProcessor = BiFunction<CheckerPredicate, CheckerPredicate, PredicateRelationship> { a: CheckerPredicate?, b: CheckerPredicate? ->
+                    for (r in Relationship.values()) {
+                        if (item == r.toString()) {
                             try {
-                                return r.clazz().getDeclaredConstructor(CheckerPredicate.class, CheckerPredicate.class).newInstance(a, b);
-                            } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
-                                     NoSuchMethodException e) {
-                                throw new RuntimeException(e);
+                                return@BiFunction r.clazz().getDeclaredConstructor(CheckerPredicate::class.java, CheckerPredicate::class.java).newInstance(a, b)
+                            } catch (e: InstantiationException) {
+                                throw RuntimeException(e)
+                            } catch (e: IllegalAccessException) {
+                                throw RuntimeException(e)
+                            } catch (e: InvocationTargetException) {
+                                throw RuntimeException(e)
+                            } catch (e: NoSuchMethodException) {
+                                throw RuntimeException(e)
                             }
                         }
                     }
-                    throw new IllegalStateException("Somehow the program really broke down somewhere, better contact devs");
-                };
-                if (endRelationship == null) {
-                    endRelationship = operationProcessor.apply(new CheckerPredicate(chunks.get(i - 1)), new CheckerPredicate(chunks.get(i + 1)));
+                    throw IllegalStateException("Somehow the program really broke down somewhere, better contact devs")
+                }
+                endRelationship = if (endRelationship == null) {
+                    operationProcessor.apply(CheckerPredicate(chunks[i - 1]), CheckerPredicate(chunks[i + 1]))
                 } else {
-                    endRelationship = operationProcessor.apply(from(endRelationship.check(ctx)), new CheckerPredicate(chunks.get(i + 1)));
+                    operationProcessor.apply(from(endRelationship.check(ctx)), CheckerPredicate(chunks[i + 1]))
                 }
             }
         }
-        assert endRelationship != null;
-        return endRelationship.check(ctx);
-
+        assert(endRelationship != null)
+        return endRelationship!!.check(ctx)
     }
 
-    public static final class PredicateTest {
-
+    class PredicateTest {
         @Test
-        public void chunkTest() {
-            Assert.assertEquals(List.of("(a AND b) OR c", "AND", "d", "OR", "e"), new CheckerPredicate("((a AND b) OR c) AND d OR e").chunk());
-            Assert.assertEquals(List.of("a AND b", "OR", "e", "AND", "?weather is SUNNY", "OR", "d AND c"), new CheckerPredicate("(a AND b) OR e AND ?weather is SUNNY OR (d AND c)").chunk());
-            Assert.assertEquals(List.of("a AND b", "OR", "e", "AND", "?weather is STORMY", "AND", "d AND c"), new CheckerPredicate("(a AND b) OR e AND ?weather is STORMY AND (d AND c)").chunk());
+        fun chunkTest() {
+            Assert.assertEquals(listOf("(a AND b) OR c", "AND", "d", "OR", "e"), CheckerPredicate("((a AND b) OR c) AND d OR e").chunk())
+            Assert.assertEquals(listOf("a AND b", "OR", "e", "AND", "?weather is SUNNY", "OR", "d AND c"), CheckerPredicate("(a AND b) OR e AND ?weather is SUNNY OR (d AND c)").chunk())
+            Assert.assertEquals(listOf("a AND b", "OR", "e", "AND", "?weather is STORMY", "AND", "d AND c"), CheckerPredicate("(a AND b) OR e AND ?weather is STORMY AND (d AND c)").chunk())
         }
 
         @Test
-        public void relationshipTest() {
-            Assert.assertTrue(new CheckerPredicate("(true XOR false) OR ((true AND false) XNOR (false OR false))").process(new PredicateContext()));
+        fun relationshipTest() {
+            Assert.assertTrue(CheckerPredicate("(true XOR false) OR ((true AND false) XNOR (false OR false))").process(PredicateContext()))
         }
 
         @Test
-        public void expressionTest() {
-            Assert.assertTrue(new CheckerPredicate("?weather = SUNNY").process(new PredicateContext(new HashMapBuilder<String, String>().put("weather", "SUNNY").build())));
-            Assert.assertTrue(new CheckerPredicate("(?weather = SUNNY AND ?time > 400) OR (?weather = STORMY)").process(new PredicateContext(new HashMapBuilder<String, String>().put("weather", "STORMY").put("time", "300").build())));
-            Assert.assertFalse(new CheckerPredicate("(?weather = SUNNY AND ?time > 400) OR (?weather = STORMY)").process(new PredicateContext(new HashMapBuilder<String, String>().put("weather", "SUNNY").put("time", "200").build())));
+        fun expressionTest() {
+            Assert.assertTrue(CheckerPredicate("?weather = SUNNY").process(PredicateContext(HashMapBuilder<String?, String?>().put("weather", "SUNNY").build())))
+            Assert.assertTrue(CheckerPredicate("(?weather = SUNNY AND ?time > 400) OR (?weather = STORMY)").process(PredicateContext(HashMapBuilder<String?, String?>().put("weather", "STORMY").put("time", "300").build())))
+            Assert.assertFalse(CheckerPredicate("(?weather = SUNNY AND ?time > 400) OR (?weather = STORMY)").process(PredicateContext(HashMapBuilder<String?, String?>().put("weather", "SUNNY").put("time", "200").build())))
         }
-
     }
 
-
+    companion object {
+        val TRUE = CheckerPredicate("true")
+        val FALSE = CheckerPredicate("false")
+        fun from(b: Boolean): CheckerPredicate {
+            return if (b) TRUE else FALSE
+        }
+    }
 }

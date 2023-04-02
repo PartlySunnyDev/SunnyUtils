@@ -1,699 +1,281 @@
-package me.partlysunny.util.reflection;
+package me.partlysunny.util.reflection
 
-import sun.misc.Unsafe;
-
-import java.lang.annotation.Annotation;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles.Lookup;
-import java.lang.invoke.VarHandle;
-import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
+import sun.misc.Unsafe
+import java.lang.invoke.MethodHandle
+import java.lang.invoke.MethodHandles.Lookup
+import java.lang.invoke.VarHandle
+import java.lang.reflect.*
+import java.util.*
 
 /*
  * NOT BY ME!!! https://gist.github.com/Lauriichan/294c64b63067dcb6a9a8658f2d040256
  * */
-public final class JavaAccessor {
+class JavaAccessor private constructor() {
+    private val unsuccessful: AccessUnsuccessful = AccessUnsuccessful
+    private var unsafe: Unsafe? = null
+    private var lookup: Lookup? = null
 
-    private static final JavaAccessor INSTANCE = new JavaAccessor();
-
-    private final AccessUnsuccessful unsuccessful = new AccessUnsuccessful();
-
-    private Unsafe unsafe;
-    private Lookup lookup;
-
-    private JavaAccessor() {
-        final Optional<Class<?>> option = JavaTracker.getCallerClass();
-        if (option.isEmpty() || option.get() != JavaAccessor.class) {
-            throw new UnsupportedOperationException("Utility class");
+    init {
+        val option: Class<*>? = JavaTracker.callerClass
+        if (option == null || option != JavaAccessor::class.java) {
+            throw UnsupportedOperationException("Utility class")
         }
-    }
-
-    public static Object getStatWithBonusicValue(final VarHandle handle) {
-        return INSTANCE.getValueSafe(null, handle);
-    }
-
-    public static Object getValue(final Object instance, final VarHandle handle) {
-        return INSTANCE.getValueSafe(instance, handle);
-    }
-
-    /*
-     * Method invokation
-     */
-
-    public static void setStaticValue(final VarHandle handle, final Object value) {
-        INSTANCE.setValueSafe(null, handle, value);
-    }
-
-    public static void setValue(final Object instance, final VarHandle handle, final Object value) {
-        INSTANCE.setValueSafe(instance, handle, value);
-    }
-
-    /*
-     * Safe Accessors
-     */
-
-    public static Object invokeStatic(final MethodHandle handle, final Object... arguments) {
-        return INSTANCE.executeSafe(null, handle, arguments);
-    }
-
-    public static Object invoke(final Object instance, final MethodHandle handle, final Object... arguments) {
-        return INSTANCE.executeSafe(instance, handle, arguments);
-    }
-
-    public static Object instance(final Class<?> clazz) {
-        return INSTANCE.init(getConstructor(clazz));
-    }
-
-    public static Object instance(final Constructor<?> constructor, final Object... arguments) {
-        return INSTANCE.init(constructor, arguments);
-    }
-
-    public static Object invokeStatic(final Method method, final Object... arguments) {
-        return INSTANCE.execute(null, method, arguments);
-    }
-
-    /*
-     * Safe Accessors helper
-     */
-
-    public static Object invoke(final Object instance, final Method method, final Object... arguments) {
-        return INSTANCE.execute(instance, method, arguments);
-    }
-
-    public static void setValue(final Object instance, final Class<?> clazz, final String fieldName, final Object value) {
-        setValue(instance, getField(clazz, fieldName), value);
-    }
-
-    public static void setObjectValue(final Object instance, final Class<?> clazz, final String fieldName, final Object value) {
-        setObjectValue(instance, getField(clazz, fieldName), value);
-    }
-
-    /*
-     * Safe Field Modifier
-     */
-
-    public static void setStaticValue(final Class<?> clazz, final String fieldName, final Object value) {
-        setStaticValue(getField(clazz, fieldName), value);
-    }
-
-    public static void setValue(final Object instance, final Field field, final Object value) {
-        if (field == null) {
-            return;
-        }
-        if (Modifier.isStatic(field.getModifiers())) {
-            setStaticValue(field, value);
-            return;
-        }
-        setObjectValue(instance, field, value);
-    }
-
-    public static void setObjectValue(final Object instance, final Field field, final Object value) {
-        if (instance == null || field == null) {
-            return;
-        }
-        try {
-            INSTANCE.setObjectValueSafe(instance, field, value);
-        } catch (final AccessUnsuccessful unsafe) {
-            INSTANCE.setObjectValueUnsafe(instance, field, value);
-        }
-    }
-
-    public static void setStaticValue(final Field field, final Object value) {
-        if (field == null) {
-            return;
-        }
-        try {
-            INSTANCE.setStaticValueSafe(field, value);
-        } catch (final AccessUnsuccessful unsafe) {
-            INSTANCE.setStaticValueUnsafe(field, value);
-        }
-    }
-
-    /*
-     * Unsafe Field Modifier
-     */
-
-    public static Object getValue(final Object instance, final Class<?> clazz, final String fieldName) {
-        return getValue(instance, getField(clazz, fieldName));
-    }
-
-    public static Object getObjectValue(final Object instance, final Class<?> clazz, final String fieldName) {
-        return getObjectValue(instance, getField(clazz, fieldName));
-    }
-
-    public static Object getStatWithBonusicValue(final Class<?> clazz, final String fieldName) {
-        return getStatWithBonusicValue(getField(clazz, fieldName));
-    }
-
-    public static Object getValue(final Object instance, final Field field) {
-        if (field == null) {
-            return null;
-        }
-        if (Modifier.isStatic(field.getModifiers())) {
-            return getStatWithBonusicValue(field);
-        }
-        return getObjectValue(instance, field);
-    }
-
-    /*
-     * Internal Utilities
-     */
-
-    public static Object getObjectValue(final Object instance, final Field field) {
-        if (instance == null || field == null) {
-            return null;
-        }
-        try {
-            return INSTANCE.getObjectValueSafe(instance, field);
-        } catch (final AccessUnsuccessful unsafe) {
-            return INSTANCE.getObjectValueUnsafe(instance, field);
-        }
-    }
-
-    /*
-     * Static Accessors Helper
-     */
-
-    public static Object getStatWithBonusicValue(final Field field) {
-        if (field == null) {
-            return null;
-        }
-        try {
-            return INSTANCE.getStatWithBonusicValueSafe(field);
-        } catch (final AccessUnsuccessful unsafe) {
-            return INSTANCE.getStatWithBonusicValueUnsafe(field);
-        }
-    }
-
-    public static VarHandle accessField(final Field field) {
-        return INSTANCE.handle(field, false);
-    }
-
-    public static VarHandle accessField(final Field field, final boolean forceModification) {
-        return INSTANCE.handle(field, forceModification);
-    }
-
-    public static MethodHandle accessFieldGetter(final Field field) {
-        return INSTANCE.handleGetter(field);
-    }
-
-    public static MethodHandle accessFieldSetter(final Field field) {
-        return INSTANCE.handleSetter(field);
-    }
-
-    public static MethodHandle accessMethod(final Method method) {
-        return INSTANCE.handle(method);
-    }
-
-    /*
-     * Static Implementation
-     */
-
-    // Invokation
-
-    public static MethodHandle accessConstructor(final Constructor<?> constructor) {
-        return INSTANCE.handle(constructor);
-    }
-
-    public static Field getField(final Class<?> clazz, final String field) {
-        if (clazz == null || field == null) {
-            return null;
-        }
-        try {
-            return clazz.getDeclaredField(field);
-        } catch (NoSuchFieldException | SecurityException ignore) {
-            try {
-                return clazz.getField(field);
-            } catch (NoSuchFieldException | SecurityException ignore0) {
-                return null;
-            }
-        }
-    }
-
-    public static Field getFieldOfType(Class<?> clazz, Class<?> type) {
-        return getFieldOfType(clazz, type, 0);
-    }
-
-    public static Field getFieldOfType(Class<?> clazz, Class<?> type, int index) {
-        final Field[] field0 = clazz.getFields();
-        final Field[] field1 = clazz.getDeclaredFields();
-        final ArrayList<Field> fields = new ArrayList<>();
-        for (Field field : field0) {
-            if (!field.getType().equals(type) || fields.contains(field)) {
-                continue;
-            }
-            fields.add(field);
-        }
-        for (Field field : field1) {
-            if (!field.getType().equals(type) || fields.contains(field)) {
-                continue;
-            }
-            fields.add(field);
-        }
-        if (fields.isEmpty() || index >= fields.size()) {
-            return null;
-        }
-        return fields.get(index);
-    }
-
-    // Setter
-
-    public static Field[] getFields(final Class<?> clazz) {
-        final Field[] field0 = clazz.getFields();
-        final Field[] field1 = clazz.getDeclaredFields();
-        final HashSet<Field> fields = new HashSet<>();
-        Collections.addAll(fields, field0);
-        Collections.addAll(fields, field1);
-        return fields.toArray(Field[]::new);
-    }
-
-    public static Field[] getFieldsOfType(Class<?> clazz, Class<?> type) {
-        final Field[] field0 = clazz.getFields();
-        final Field[] field1 = clazz.getDeclaredFields();
-        final HashSet<Field> fields = new HashSet<>();
-        for (Field field : field0) {
-            if (!field.getType().equals(type)) {
-                continue;
-            }
-            fields.add(field);
-        }
-        for (Field field : field1) {
-            if (!field.getType().equals(type)) {
-                continue;
-            }
-            fields.add(field);
-        }
-        return fields.toArray(Field[]::new);
-    }
-
-    public static Method getMethod(final Class<?> clazz, final String method, final Class<?>... arguments) {
-        if (clazz == null || method == null) {
-            return null;
-        }
-        try {
-            return clazz.getDeclaredMethod(method, arguments);
-        } catch (NoSuchMethodException | SecurityException ignore) {
-            try {
-                return clazz.getMethod(method, arguments);
-            } catch (NoSuchMethodException | SecurityException ignore0) {
-                return null;
-            }
-        }
-    }
-
-    public static Method[] getMethods(final Class<?> clazz) {
-        final Method[] method0 = clazz.getMethods();
-        final Method[] method1 = clazz.getDeclaredMethods();
-        final HashSet<Method> methods = new HashSet<>();
-        Collections.addAll(methods, method0);
-        Collections.addAll(methods, method1);
-        return methods.toArray(Method[]::new);
-    }
-
-    public static Constructor<?> getConstructor(final Class<?> clazz, final Class<?>... arguments) {
-        if (clazz == null) {
-            return null;
-        }
-        try {
-            return clazz.getDeclaredConstructor(arguments);
-        } catch (NoSuchMethodException | SecurityException ignore) {
-            try {
-                return clazz.getConstructor(arguments);
-            } catch (NoSuchMethodException | SecurityException ignore0) {
-                return null;
-            }
-        }
-    }
-
-    public static Constructor<?>[] getConstructors(final Class<?> clazz) {
-        final Constructor<?>[] constructor0 = clazz.getConstructors();
-        final Constructor<?>[] constructor1 = clazz.getDeclaredConstructors();
-        final HashSet<Constructor<?>> constructors = new HashSet<>();
-        Collections.addAll(constructors, constructor0);
-        Collections.addAll(constructors, constructor1);
-        return constructors.toArray(Constructor[]::new);
-
-    }
-
-    // Getter
-
-    public static Class<?> getClass(final String name) {
-        try {
-            return Class.forName(name);
-        } catch (final ClassNotFoundException | LinkageError e) {
-            return null;
-        }
-    }
-
-    public static Class<?> getClass(final Class<?> clazz, final String name) {
-        if (clazz == null || name == null) {
-            return null;
-        }
-        final int size = clazz.getClasses().length + clazz.getDeclaredClasses().length;
-        if (size == 0) {
-            return null;
-        }
-        final Class<?>[] classes = new Class<?>[size];
-        final Class<?>[] tmp = clazz.getClasses();
-        System.arraycopy(tmp, 0, classes, 0, tmp.length);
-        System.arraycopy(clazz.getDeclaredClasses(), tmp.length, classes, tmp.length, size - tmp.length);
-        for (int i = 0; i < size; i++) {
-            String target = classes[i].getSimpleName();
-            if (target.contains(".")) {
-                target = target.split(".", 2)[0];
-            }
-            if (target.equals(name)) {
-                return classes[i];
-            }
-        }
-        return null;
-    }
-
-    public static Class<?> getClassFromField(final Class<?> clazz, final boolean declared, final Class<?>... blacklistArray) {
-        if (clazz == null) {
-            return null;
-        }
-        final Class<?>[] blacklist = blacklistArray;
-        final Field[] fields = getFields(clazz);
-        for (Field field : fields) {
-            if (Modifier.isStatic(field.getModifiers()) && declared) {
-                continue;
-            }
-            boolean passed = true;
-            for (Class<?> forbidden : blacklist) {
-                if (forbidden.isAssignableFrom(field.getType())) {
-                    passed = false;
-                    break;
-                }
-            }
-            if (!passed) {
-                continue;
-            }
-            return field.getType();
-        }
-        return null;
-    }
-
-    public static <A extends Annotation> A getAnnotation(final AnnotatedElement element, final Class<A> annotationType) {
-        final A annotation = element.getAnnotation(annotationType);
-        if (annotation != null) {
-            return annotation;
-        }
-        return element.getDeclaredAnnotation(annotationType);
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <A extends Annotation> A[] getAnnotations(final AnnotatedElement element, final Class<A> annotationType) {
-        final A[] annotation0 = element.getAnnotationsByType(annotationType);
-        final A[] annotation1 = element.getDeclaredAnnotationsByType(annotationType);
-        if (annotation0.length != 0 && annotation1.length != 0) {
-            final HashSet<A> annotations = new HashSet<>();
-            Collections.addAll(annotations, annotation0);
-            Collections.addAll(annotations, annotation1);
-            return annotations.toArray((A[]) Array.newInstance(annotationType, annotations.size()));
-        }
-        if (annotation0.length == 0) {
-            return annotation1;
-        }
-        return annotation0;
-    }
-
-    public static <A extends Annotation> Optional<A> getOptionalAnnotation(final AnnotatedElement element, final Class<A> annotationType) {
-        return Optional.ofNullable(getAnnotation(element, annotationType));
     }
 
     /*
      * Static Accessors
      */
-
-    public Unsafe unsafe() {
-        if (unsafe != null) {
-            return unsafe;
-        }
-        try {
-            final Field field = Unsafe.class.getDeclaredField("theUnsafe");
-            field.setAccessible(true);
-            return unsafe = (Unsafe) field.get(null);
-        } catch (final Exception exp) {
-            return null;
+    fun unsafe(): Unsafe? {
+        return if (unsafe != null) {
+            unsafe
+        } else try {
+            val field = Unsafe::class.java.getDeclaredField("theUnsafe")
+            field.isAccessible = true
+            field[null] as Unsafe
+        } catch (exp: Exception) {
+            null
         }
     }
 
-    public Lookup lookup() {
-        if (lookup != null) {
-            return lookup;
-        }
-        return lookup = (Lookup) getStatWithBonusicValueUnsafe(getField(Lookup.class, "IMPL_LOOKUP"));
+    fun lookup(): Lookup {
+        return lookup
+                ?: (getStatWithBonusicValueUnsafe(getField(Lookup::class.java, "IMPL_LOOKUP")) as Lookup)
     }
 
-    public Object execute(final Object instance, final Method method, final Object... arguments) {
-        if (method == null || method.getParameterCount() != arguments.length) {
-            return null;
-        }
-        try {
-            if (!Modifier.isStatic(method.getModifiers())) {
+    fun execute(instance: Any?, method: Method?, vararg arguments: Any?): Any? {
+        return if (method == null || method.parameterCount != arguments.size) {
+            null
+        } else try {
+            if (!Modifier.isStatic(method.modifiers)) {
                 if (instance == null) {
-                    return null;
+                    return null
                 }
-                if (arguments.length == 0) {
-                    return lookup().unreflect(method).invokeWithArguments(instance);
+                if (arguments.size == 0) {
+                    return lookup().unreflect(method).invokeWithArguments(instance)
                 }
-                final Object[] input = new Object[arguments.length + 1];
-                input[0] = instance;
-                System.arraycopy(arguments, 0, input, 1, arguments.length);
-                return lookup().unreflect(method).invokeWithArguments(input);
+                val input = arrayOfNulls<Any>(arguments.size + 1)
+                input[0] = instance
+                System.arraycopy(arguments, 0, input, 1, arguments.size)
+                return lookup().unreflect(method).invokeWithArguments(*input)
             }
-            return lookup().unreflect(method).invokeWithArguments(arguments);
-        } catch (final Throwable e) {
-            return null;
+            lookup().unreflect(method).invokeWithArguments(*arguments)
+        } catch (e: Throwable) {
+            null
         }
     }
 
-    public Object init(final Constructor<?> constructor, final Object... arguments) {
-        if (constructor == null || constructor.getParameterCount() != arguments.length) {
-            return null;
-        }
-        try {
-            return lookup().unreflectConstructor(constructor).invokeWithArguments(arguments);
-        } catch (final Throwable e) {
-            return null;
+    fun init(constructor: Constructor<*>?, vararg arguments: Any?): Any? {
+        return if (constructor == null || constructor.parameterCount != arguments.size) {
+            null
+        } else try {
+            lookup().unreflectConstructor(constructor).invokeWithArguments(*arguments)
+        } catch (e: Throwable) {
+            null
         }
     }
 
-    public VarHandle handle(final Field field, final boolean force) {
+    fun handle(field: Field?, force: Boolean): VarHandle? {
         if (field == null) {
-            return null;
+            return null
         }
         if (force) {
-            unfinalize(field);
+            unfinalize(field)
         }
-        try {
-            return lookup().unreflectVarHandle(field);
-        } catch (final Throwable e) {
-            return null;
+        return try {
+            lookup().unreflectVarHandle(field)
+        } catch (e: Throwable) {
+            null
         }
     }
 
-    public MethodHandle handleGetter(final Field field) {
-        if (field == null) {
-            return null;
-        }
-        try {
-            return lookup().unreflectGetter(field);
-        } catch (final Throwable e) {
-            return null;
+    fun handleGetter(field: Field?): MethodHandle? {
+        return if (field == null) {
+            null
+        } else try {
+            lookup().unreflectGetter(field)
+        } catch (e: Throwable) {
+            null
         }
     }
 
     /*
      * Static Utilities
      */
-
-    public MethodHandle handleSetter(final Field field) {
+    fun handleSetter(field: Field?): MethodHandle? {
         if (field == null) {
-            return null;
+            return null
         }
-        unfinalize(field);
-        try {
-            return lookup().unreflectSetter(field);
-        } catch (final Throwable e) {
-            return null;
-        }
-    }
-
-    public MethodHandle handle(final Method method) {
-        if (method == null) {
-            return null;
-        }
-        try {
-            return lookup().unreflect(method);
-        } catch (final Throwable e) {
-            return null;
+        unfinalize(field)
+        return try {
+            lookup().unreflectSetter(field)
+        } catch (e: Throwable) {
+            null
         }
     }
 
-    public MethodHandle handle(final Constructor<?> constructor) {
-        if (constructor == null) {
-            return null;
-        }
-        try {
-            return lookup().unreflectConstructor(constructor);
-        } catch (final Throwable e) {
-            return null;
+    fun handle(method: Method?): MethodHandle? {
+        return if (method == null) {
+            null
+        } else try {
+            lookup().unreflect(method)
+        } catch (e: Throwable) {
+            null
         }
     }
 
-    public Object executeSafe(final Object instance, final MethodHandle handle, final Object... arguments) {
-        if (handle == null || handle.type().parameterCount() != arguments.length) {
-            return null;
+    fun handle(constructor: Constructor<*>?): MethodHandle? {
+        return if (constructor == null) {
+            null
+        } else try {
+            lookup().unreflectConstructor(constructor)
+        } catch (e: Throwable) {
+            null
         }
-        try {
+    }
+
+    fun executeSafe(instance: Any?, handle: MethodHandle?, vararg arguments: Any?): Any? {
+        return if (handle == null || handle.type().parameterCount() != arguments.size) {
+            null
+        } else try {
             if (instance != null) {
-                if (arguments.length == 0) {
-                    return handle.invokeWithArguments(instance);
+                if (arguments.size == 0) {
+                    return handle.invokeWithArguments(instance)
                 }
-                final Object[] input = new Object[arguments.length + 1];
-                input[0] = instance;
-                System.arraycopy(arguments, 0, input, 1, arguments.length);
-                return handle.invokeWithArguments(input);
+                val input = arrayOfNulls<Any>(arguments.size + 1)
+                input[0] = instance
+                System.arraycopy(arguments, 0, input, 1, arguments.size)
+                return handle.invokeWithArguments(*input)
             }
-            return handle.invokeWithArguments(arguments);
-        } catch (final Throwable e) {
-            return null;
+            handle.invokeWithArguments(*arguments)
+        } catch (e: Throwable) {
+            null
         }
     }
 
-    public Object getValueSafe(final Object instance, final VarHandle handle) {
-        if (handle == null) {
-            return null;
-        }
-        try {
+    fun getValueSafe(instance: Any?, handle: VarHandle?): Any? {
+        return if (handle == null) {
+            null
+        } else try {
             if (instance == null) {
-                return handle.getVolatile();
-            }
-            return handle.getVolatile(instance);
-        } catch (final Throwable e) {
-            throw unsuccessful;
+                handle.getVolatile()
+            } else handle.getVolatile(instance)
+        } catch (e: Throwable) {
+            throw unsuccessful
         }
     }
 
-    public void setValueSafe(final Object instance, final VarHandle handle, final Object value) {
-        if (handle == null || value != null && !handle.varType().isAssignableFrom(value.getClass())) {
-            return;
+    fun setValueSafe(instance: Any?, handle: VarHandle?, value: Any?) {
+        if (handle == null || value != null && !handle.varType().isAssignableFrom(value.javaClass)) {
+            return
         }
         try {
             if (instance != null) {
-                handle.setVolatile(value);
-                return;
+                handle.setVolatile(value)
+                return
             }
-            handle.setVolatile(instance, value);
-        } catch (final Throwable e) {
-            throw unsuccessful;
+            handle.setVolatile(instance, value)
+        } catch (e: Throwable) {
+            throw unsuccessful
         }
     }
 
-    public Object getObjectValueSafe(final Object instance, final Field field) {
-        if (instance == null || field == null) {
-            return null;
+    fun getObjectValueSafe(instance: Any?, field: Field?): Any? {
+        return if (instance == null || field == null) {
+            null
+        } else try {
+            lookup().unreflectGetter(field).invoke(instance)
+        } catch (e: Throwable) {
+            throw unsuccessful
         }
+    }
+
+    fun getStatWithBonusicValueSafe(field: Field?): Any? {
+        return if (field == null) {
+            null
+        } else try {
+            lookup().unreflectGetter(field).invoke()
+        } catch (e: Throwable) {
+            throw unsuccessful
+        }
+    }
+
+    fun setObjectValueSafe(instance: Any?, field: Field?, value: Any?) {
+        if (instance == null || field == null || value != null && !field.type.isAssignableFrom(value.javaClass)) {
+            return
+        }
+        unfinalize(field)
         try {
-            return lookup().unreflectGetter(field).invoke(instance);
-        } catch (final Throwable e) {
-            throw unsuccessful;
+            lookup().unreflectSetter(field).invokeWithArguments(instance, value)
+        } catch (e: Throwable) {
+            throw unsuccessful
         }
     }
 
-    public Object getStatWithBonusicValueSafe(final Field field) {
+    fun setStaticValueSafe(field: Field?, value: Any?) {
+        if (field == null || value != null && !field.type.isAssignableFrom(value.javaClass)) {
+            return
+        }
+        unfinalize(field)
+        try {
+            lookup().unreflectSetter(field).invokeWithArguments(value)
+        } catch (e: Throwable) {
+            throw unsuccessful
+        }
+    }
+
+    fun getObjectValueUnsafe(instance: Any?, field: Field?): Any? {
+        if (instance == null || field == null) {
+            return null
+        }
+        val unsafe = unsafe()
+        return unsafe!!.getObjectVolatile(instance, unsafe.objectFieldOffset(field))
+    }
+
+    fun getStatWithBonusicValueUnsafe(field: Field?): Any? {
         if (field == null) {
-            return null;
+            return null
         }
-        try {
-            return lookup().unreflectGetter(field).invoke();
-        } catch (final Throwable e) {
-            throw unsuccessful;
-        }
+        val unsafe = unsafe()
+        return unsafe!!.getObjectVolatile(unsafe.staticFieldBase(field), unsafe.staticFieldOffset(field))
     }
 
-    public void setObjectValueSafe(final Object instance, final Field field, final Object value) {
-        if (instance == null || field == null || value != null && !field.getType().isAssignableFrom(value.getClass())) {
-            return;
-        }
-        unfinalize(field);
-        try {
-            lookup().unreflectSetter(field).invokeWithArguments(instance, value);
-        } catch (final Throwable e) {
-            throw unsuccessful;
-        }
-    }
-
-    public void setStaticValueSafe(final Field field, final Object value) {
-        if (field == null || value != null && !field.getType().isAssignableFrom(value.getClass())) {
-            return;
-        }
-        unfinalize(field);
-        try {
-            lookup().unreflectSetter(field).invokeWithArguments(value);
-        } catch (final Throwable e) {
-            throw unsuccessful;
-        }
-    }
-
-    public Object getObjectValueUnsafe(final Object instance, final Field field) {
+    fun setObjectValueUnsafe(instance: Any?, field: Field?, value: Any?) {
         if (instance == null || field == null) {
-            return null;
+            return
         }
-        final Unsafe unsafe = unsafe();
-        return unsafe.getObjectVolatile(instance, unsafe.objectFieldOffset(field));
-    }
-
-    public Object getStatWithBonusicValueUnsafe(final Field field) {
-        if (field == null) {
-            return null;
-        }
-        final Unsafe unsafe = unsafe();
-        return unsafe.getObjectVolatile(unsafe.staticFieldBase(field), unsafe.staticFieldOffset(field));
-    }
-
-    public void setObjectValueUnsafe(final Object instance, final Field field, final Object value) {
-        if (instance == null || field == null) {
-            return;
-        }
-        unfinalize(field);
-        final Unsafe unsafe = unsafe();
+        unfinalize(field)
+        val unsafe = unsafe()
         if (value == null) {
-            unsafe.putObject(instance, unsafe.objectFieldOffset(field), null);
-            return;
+            unsafe!!.putObject(instance, unsafe.objectFieldOffset(field), null)
+            return
         }
-        if (field.getType().isAssignableFrom(value.getClass())) {
-            unsafe.putObject(instance, unsafe.objectFieldOffset(field), field.getType().cast(value));
+        if (field.type.isAssignableFrom(value.javaClass)) {
+            unsafe!!.putObject(instance, unsafe.objectFieldOffset(field), field.type.cast(value))
         }
     }
 
-    public void setStaticValueUnsafe(final Field field, final Object value) {
+    fun setStaticValueUnsafe(field: Field?, value: Any?) {
         if (field == null) {
-            return;
+            return
         }
-        unfinalize(field);
-        final Unsafe unsafe = unsafe();
+        unfinalize(field)
+        val unsafe = unsafe()
         if (value == null) {
-            unsafe.putObject(unsafe.staticFieldBase(field), unsafe.staticFieldOffset(field), null);
-            return;
+            unsafe!!.putObject(unsafe.staticFieldBase(field), unsafe.staticFieldOffset(field), null)
+            return
         }
-        if (field.getType().isAssignableFrom(value.getClass())) {
-            unsafe.putObject(unsafe.staticFieldBase(field), unsafe.staticFieldOffset(field), field.getType().cast(value));
+        if (field.type.isAssignableFrom(value.javaClass)) {
+            unsafe!!.putObject(unsafe.staticFieldBase(field), unsafe.staticFieldOffset(field), field.type.cast(value))
         }
     }
 
-    private void unfinalize(final Field field) {
-        if (!Modifier.isFinal(field.getModifiers())) {
-            return;
+    private fun unfinalize(field: Field) {
+        if (!Modifier.isFinal(field.modifiers)) {
+            return
         }
         try {
-            lookup().findSetter(Field.class, "modifiers", int.class).invokeExact(field, field.getModifiers() & ~Modifier.FINAL);
-        } catch (final Throwable e) {
+            lookup().findSetter(Field::class.java, "modifiers", Int::class.javaPrimitiveType).invokeExact(field, field.modifiers and Modifier.FINAL.inv())
+        } catch (e: Throwable) {
             // Ignore
         }
     }
@@ -701,9 +283,412 @@ public final class JavaAccessor {
     /*
      * Internal Exceptions
      */
-
-    private static final class AccessUnsuccessful extends RuntimeException {
-        private static final long serialVersionUID = 1L;
+    private object AccessUnsuccessful : RuntimeException() {
+        private const val serialVersionUID = 1L
     }
 
+    companion object {
+        private val INSTANCE = JavaAccessor()
+        fun getStatWithBonusicValue(handle: VarHandle?): Any? {
+            return INSTANCE.getValueSafe(null, handle)
+        }
+
+        fun getValue(instance: Any?, handle: VarHandle?): Any? {
+            return INSTANCE.getValueSafe(instance, handle)
+        }
+
+        /*
+     * Method invokation
+     */
+        fun setStaticValue(handle: VarHandle?, value: Any?) {
+            INSTANCE.setValueSafe(null, handle, value)
+        }
+
+        fun setValue(instance: Any?, handle: VarHandle?, value: Any?) {
+            INSTANCE.setValueSafe(instance, handle, value)
+        }
+
+        /*
+     * Safe Accessors
+     */
+        fun invokeStatic(handle: MethodHandle?, vararg arguments: Any?): Any? {
+            return INSTANCE.executeSafe(null, handle, *arguments)
+        }
+
+        operator fun invoke(instance: Any?, handle: MethodHandle?, vararg arguments: Any?): Any? {
+            return INSTANCE.executeSafe(instance, handle, *arguments)
+        }
+
+        fun instance(clazz: Class<*>?): Any? {
+            return INSTANCE.init(getConstructor(clazz))
+        }
+
+        fun instance(constructor: Constructor<*>?, vararg arguments: Any?): Any? {
+            return INSTANCE.init(constructor, *arguments)
+        }
+
+        fun invokeStatic(method: Method?, vararg arguments: Any?): Any? {
+            return INSTANCE.execute(null, method, *arguments)
+        }
+
+        /*
+     * Safe Accessors helper
+     */
+        operator fun invoke(instance: Any?, method: Method?, vararg arguments: Any?): Any? {
+            return INSTANCE.execute(instance, method, *arguments)
+        }
+
+        fun setValue(instance: Any?, clazz: Class<*>?, fieldName: String?, value: Any?) {
+            setValue(instance, getField(clazz, fieldName), value)
+        }
+
+        fun setObjectValue(instance: Any?, clazz: Class<*>?, fieldName: String?, value: Any?) {
+            setObjectValue(instance, getField(clazz, fieldName), value)
+        }
+
+        /*
+     * Safe Field Modifier
+     */
+        fun setStaticValue(clazz: Class<*>?, fieldName: String?, value: Any?) {
+            setStaticValue(getField(clazz, fieldName), value)
+        }
+
+        fun setValue(instance: Any?, field: Field?, value: Any?) {
+            if (field == null) {
+                return
+            }
+            if (Modifier.isStatic(field.modifiers)) {
+                setStaticValue(field, value)
+                return
+            }
+            setObjectValue(instance, field, value)
+        }
+
+        fun setObjectValue(instance: Any?, field: Field?, value: Any?) {
+            if (instance == null || field == null) {
+                return
+            }
+            try {
+                INSTANCE.setObjectValueSafe(instance, field, value)
+            } catch (unsafe: AccessUnsuccessful) {
+                INSTANCE.setObjectValueUnsafe(instance, field, value)
+            }
+        }
+
+        fun setStaticValue(field: Field?, value: Any?) {
+            if (field == null) {
+                return
+            }
+            try {
+                INSTANCE.setStaticValueSafe(field, value)
+            } catch (unsafe: AccessUnsuccessful) {
+                INSTANCE.setStaticValueUnsafe(field, value)
+            }
+        }
+
+        /*
+     * Unsafe Field Modifier
+     */
+        fun getValue(instance: Any?, clazz: Class<*>?, fieldName: String?): Any? {
+            return getValue(instance, getField(clazz, fieldName))
+        }
+
+        fun getObjectValue(instance: Any?, clazz: Class<*>?, fieldName: String?): Any? {
+            return getObjectValue(instance, getField(clazz, fieldName))
+        }
+
+        fun getStatWithBonusicValue(clazz: Class<*>?, fieldName: String?): Any? {
+            return getStatWithBonusicValue(getField(clazz, fieldName))
+        }
+
+        fun getValue(instance: Any?, field: Field?): Any? {
+            if (field == null) {
+                return null
+            }
+            return if (Modifier.isStatic(field.modifiers)) {
+                getStatWithBonusicValue(field)
+            } else getObjectValue(instance, field)
+        }
+
+        /*
+     * Internal Utilities
+     */
+        fun getObjectValue(instance: Any?, field: Field?): Any? {
+            return if (instance == null || field == null) {
+                null
+            } else try {
+                INSTANCE.getObjectValueSafe(instance, field)
+            } catch (unsafe: AccessUnsuccessful) {
+                INSTANCE.getObjectValueUnsafe(instance, field)
+            }
+        }
+
+        /*
+     * Static Accessors Helper
+     */
+        fun getStatWithBonusicValue(field: Field?): Any? {
+            return if (field == null) {
+                null
+            } else try {
+                INSTANCE.getStatWithBonusicValueSafe(field)
+            } catch (unsafe: AccessUnsuccessful) {
+                INSTANCE.getStatWithBonusicValueUnsafe(field)
+            }
+        }
+
+        fun accessField(field: Field?): VarHandle? {
+            return INSTANCE.handle(field, false)
+        }
+
+        fun accessField(field: Field?, forceModification: Boolean): VarHandle? {
+            return INSTANCE.handle(field, forceModification)
+        }
+
+        fun accessFieldGetter(field: Field?): MethodHandle? {
+            return INSTANCE.handleGetter(field)
+        }
+
+        fun accessFieldSetter(field: Field?): MethodHandle? {
+            return INSTANCE.handleSetter(field)
+        }
+
+        fun accessMethod(method: Method?): MethodHandle? {
+            return INSTANCE.handle(method)
+        }
+
+        /*
+     * Static Implementation
+     */
+        // Invokation
+        fun accessConstructor(constructor: Constructor<*>?): MethodHandle? {
+            return INSTANCE.handle(constructor)
+        }
+
+        fun getField(clazz: Class<*>?, field: String?): Field? {
+            return if (clazz == null || field == null) {
+                null
+            } else try {
+                clazz.getDeclaredField(field)
+            } catch (ignore: NoSuchFieldException) {
+                try {
+                    clazz.getField(field)
+                } catch (ignore0: NoSuchFieldException) {
+                    null
+                } catch (ignore0: SecurityException) {
+                    null
+                }
+            } catch (ignore: SecurityException) {
+                try {
+                    clazz.getField(field)
+                } catch (ignore0: NoSuchFieldException) {
+                    null
+                } catch (ignore0: SecurityException) {
+                    null
+                }
+            }
+        }
+
+        fun getFieldOfType(clazz: Class<*>, type: Class<*>): Field? {
+            return getFieldOfType(clazz, type, 0)
+        }
+
+        fun getFieldOfType(clazz: Class<*>, type: Class<*>, index: Int): Field? {
+            val field0 = clazz.fields
+            val field1 = clazz.declaredFields
+            val fields = ArrayList<Field>()
+            for (field in field0) {
+                if (field.type != type || fields.contains(field)) {
+                    continue
+                }
+                fields.add(field)
+            }
+            for (field in field1) {
+                if (field.type != type || fields.contains(field)) {
+                    continue
+                }
+                fields.add(field)
+            }
+            return if (fields.isEmpty() || index >= fields.size) {
+                null
+            } else fields[index]
+        }
+
+        // Setter
+        fun getFields(clazz: Class<*>): Array<Field> {
+            val field0 = clazz.fields
+            val field1 = clazz.declaredFields
+            val fields = HashSet<Field>()
+            Collections.addAll(fields, *field0)
+            Collections.addAll(fields, *field1)
+            return fields.toTypedArray()
+        }
+
+        fun getFieldsOfType(clazz: Class<*>, type: Class<*>): Array<Field> {
+            val field0 = clazz.fields
+            val field1 = clazz.declaredFields
+            val fields = HashSet<Field>()
+            for (field in field0) {
+                if (field.type != type) {
+                    continue
+                }
+                fields.add(field)
+            }
+            for (field in field1) {
+                if (field.type != type) {
+                    continue
+                }
+                fields.add(field)
+            }
+            return fields.toTypedArray()
+        }
+
+        fun getMethod(clazz: Class<*>?, method: String?, vararg arguments: Class<*>?): Method? {
+            return if (clazz == null || method == null) {
+                null
+            } else try {
+                clazz.getDeclaredMethod(method, *arguments)
+            } catch (ignore: NoSuchMethodException) {
+                try {
+                    clazz.getMethod(method, *arguments)
+                } catch (ignore0: NoSuchMethodException) {
+                    null
+                } catch (ignore0: SecurityException) {
+                    null
+                }
+            } catch (ignore: SecurityException) {
+                try {
+                    clazz.getMethod(method, *arguments)
+                } catch (ignore0: NoSuchMethodException) {
+                    null
+                } catch (ignore0: SecurityException) {
+                    null
+                }
+            }
+        }
+
+        fun getMethods(clazz: Class<*>): Array<Method> {
+            val method0 = clazz.methods
+            val method1 = clazz.declaredMethods
+            val methods = HashSet<Method>()
+            Collections.addAll(methods, *method0)
+            Collections.addAll(methods, *method1)
+            return methods.toTypedArray()
+        }
+
+        fun getConstructor(clazz: Class<*>?, vararg arguments: Class<*>?): Constructor<*>? {
+            return if (clazz == null) {
+                null
+            } else try {
+                clazz.getDeclaredConstructor(*arguments)
+            } catch (ignore: NoSuchMethodException) {
+                try {
+                    clazz.getConstructor(*arguments)
+                } catch (ignore0: NoSuchMethodException) {
+                    null
+                } catch (ignore0: SecurityException) {
+                    null
+                }
+            } catch (ignore: SecurityException) {
+                try {
+                    clazz.getConstructor(*arguments)
+                } catch (ignore0: NoSuchMethodException) {
+                    null
+                } catch (ignore0: SecurityException) {
+                    null
+                }
+            }
+        }
+
+        fun getConstructors(clazz: Class<*>): Array<Constructor<*>> {
+            val constructor0 = clazz.constructors
+            val constructor1 = clazz.declaredConstructors
+            val constructors = HashSet<Constructor<*>>()
+            Collections.addAll(constructors, *constructor0)
+            Collections.addAll(constructors, *constructor1)
+            return constructors.toTypedArray()
+        }
+
+        // Getter
+        fun getClass(name: String?): Class<*>? {
+            return try {
+                Class.forName(name)
+            } catch (e: ClassNotFoundException) {
+                null
+            } catch (e: LinkageError) {
+                null
+            }
+        }
+
+        fun getClass(clazz: Class<*>?, name: String?): Class<*>? {
+            if (clazz == null || name == null) {
+                return null
+            }
+            val size = clazz.classes.size + clazz.declaredClasses.size
+            if (size == 0) {
+                return null
+            }
+            val classes: Array<Class<*>?> = arrayOfNulls(size)
+            val tmp = clazz.classes
+            System.arraycopy(tmp, 0, classes, 0, tmp.size)
+            System.arraycopy(clazz.declaredClasses, tmp.size, classes, tmp.size, size - tmp.size)
+            for (i in 0 until size) {
+                var target = classes[i]!!.simpleName
+                if (target.contains(".")) {
+                    target = target.split(".".toRegex(), limit = 2).toTypedArray()[0]
+                }
+                if (target == name) {
+                    return classes[i]
+                }
+            }
+            return null
+        }
+
+        fun getClassFromField(clazz: Class<*>?, declared: Boolean, vararg blacklistArray: Class<*>): Class<*>? {
+            if (clazz == null) {
+                return null
+            }
+            val blacklist: Array<out Class<*>> = blacklistArray
+            val fields = getFields(clazz)
+            for (field in fields) {
+                if (Modifier.isStatic(field.modifiers) && declared) {
+                    continue
+                }
+                var passed = true
+                for (forbidden in blacklist) {
+                    if (forbidden.isAssignableFrom(field.type)) {
+                        passed = false
+                        break
+                    }
+                }
+                if (!passed) {
+                    continue
+                }
+                return field.type
+            }
+            return null
+        }
+
+        fun <A : Annotation?> getAnnotation(element: AnnotatedElement, annotationType: Class<A>?): A {
+            val annotation = annotationType?.let { element.getAnnotation(it) }
+            return annotation ?: element.getDeclaredAnnotation(annotationType)
+        }
+
+        fun <A : Annotation?> getAnnotations(element: AnnotatedElement, annotationType: Class<A>?): Array<A> {
+            val annotation0 = element.getAnnotationsByType(annotationType)
+            val annotation1 = element.getDeclaredAnnotationsByType(annotationType)
+            if (annotation0.isNotEmpty() && annotation1.isNotEmpty()) {
+                val annotations = HashSet<A>()
+                Collections.addAll(annotations, *annotation0)
+                Collections.addAll(annotations, *annotation1)
+                return annotations.toArray(java.lang.reflect.Array.newInstance(annotationType, annotations.size) as Array<A>)
+            }
+            return if (annotation0.isEmpty()) {
+                annotation1
+            } else annotation0
+        }
+
+        fun <A : Annotation> getOptionalAnnotation(element: AnnotatedElement, annotationType: Class<A>?): Optional<A> {
+            return Optional.ofNullable(getAnnotation(element, annotationType))
+        }
+    }
 }

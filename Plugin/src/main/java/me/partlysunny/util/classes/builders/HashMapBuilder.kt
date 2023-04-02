@@ -1,22 +1,19 @@
-package me.partlysunny.util.classes.builders;
+package me.partlysunny.util.classes.builders
 
-import java.util.HashMap;
-
-public class HashMapBuilder<K, V> {
-
-    private final HashMap<K, V> internal = new HashMap<>();
-
-    public static <A, B> HashMapBuilder<A, B> builder(Class<A> a, Class<B> b) {
-        return new HashMapBuilder<>();
+class HashMapBuilder<K, V> {
+    private val internal = HashMap<K, V>()
+    fun put(key: K, value: V): HashMapBuilder<K, V> {
+        internal[key] = value
+        return this
     }
 
-    public HashMapBuilder<K, V> put(K key, V value) {
-        internal.put(key, value);
-        return this;
+    fun build(): HashMap<K, V> {
+        return internal
     }
 
-    public HashMap<K, V> build() {
-        return internal;
+    companion object {
+        fun <A, B> builder(a: Class<A>?, b: Class<B>?): HashMapBuilder<A, B> {
+            return HashMapBuilder()
+        }
     }
-
 }

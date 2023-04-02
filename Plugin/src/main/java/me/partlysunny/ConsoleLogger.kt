@@ -1,42 +1,40 @@
-package me.partlysunny;
+package me.partlysunny
 
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.java.JavaPlugin
+import java.util.logging.Level
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+object ConsoleLogger {
+    private val log = JavaPlugin.getPlugin(SunnySpigotCore::class.java).logger
 
-public class ConsoleLogger {
-
-    private static final Logger log = JavaPlugin.getPlugin(SunnySpigotCore.class).getLogger();
-
-    public static void console(String msg) {
-        log.info(msg);
+    @JvmStatic
+    fun console(msg: String?) {
+        log.info(msg)
     }
 
-    public static void console(String... msg) {
-        for (String s : msg) {
-            log.info(s);
+    fun console(vararg msg: String?) {
+        for (s in msg) {
+            log.info(s)
         }
     }
 
-    public static void error(String msg) {
-        log.log(Level.SEVERE, msg);
+    @JvmStatic
+    fun error(msg: String?) {
+        log.log(Level.SEVERE, msg)
     }
 
-    public static void error(String... msg) {
-        for (String s : msg) {
-            log.log(Level.SEVERE, s);
+    fun error(vararg msg: String?) {
+        for (s in msg) {
+            log.log(Level.SEVERE, s)
         }
     }
 
-    public static void warn(String msg) {
-        log.warning(msg);
+    fun warn(msg: String?) {
+        log.warning(msg)
     }
 
-    public static void warn(String... msg) {
-        for (String s : msg) {
-            log.warning(s);
+    fun warn(vararg msg: String?) {
+        for (s in msg) {
+            log.warning(s)
         }
     }
-
 }

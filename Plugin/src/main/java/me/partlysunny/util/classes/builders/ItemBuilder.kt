@@ -1,88 +1,80 @@
-package me.partlysunny.util.classes.builders;
+package me.partlysunny.util.classes.builders
 
-import de.tr7zw.nbtapi.NBTItem;
-import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
+import de.tr7zw.nbtapi.NBTItem
+import org.bukkit.Material
+import org.bukkit.enchantments.Enchantment
+import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.ItemMeta
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+class ItemBuilder {
+    private val meta: ItemMeta?
+    private val s: ItemStack
+    private val enchants: MutableMap<Enchantment?, Int?> = HashMap()
+    private val nbti: NBTItem
 
-public class ItemBuilder {
-
-    private final ItemMeta meta;
-    private final ItemStack s;
-    private final Map<Enchantment, Integer> enchants = new HashMap<>();
-    private final NBTItem nbti;
-
-    public ItemBuilder(Material m) {
-        this.s = new ItemStack(m);
-        this.nbti = new NBTItem(s);
-        this.meta = s.getItemMeta();
+    constructor(m: Material?) {
+        s = ItemStack(m!!)
+        nbti = NBTItem(s)
+        meta = s.itemMeta
     }
 
-    public ItemBuilder(ItemStack s) {
-        this.s = s.clone();
-        ItemMeta itemMeta = s.getItemMeta();
-        if (itemMeta != null) {
-            this.meta = itemMeta.clone();
-        } else {
-            this.meta = null;
+    constructor(s: ItemStack) {
+        this.s = s.clone()
+        meta = s.itemMeta?.clone()
+        nbti = NBTItem(this.s)
+    }
+
+    fun setNbtTag(key: String?, value: Any?): ItemBuilder {
+        nbti.setObject(key, value)
+        return this
+    }
+
+    fun setName(name: String?): ItemBuilder {
+        meta?.setDisplayName(name)
+        return this
+    }
+
+    fun setLore(vararg lore: String?): ItemBuilder {
+        if (meta != null) meta.lore = listOf(*lore)
+        return this
+    }
+
+    fun addEnchantment(e: Enchantment?, level: Int): ItemBuilder {
+        enchants[e] = level
+        return this
+    }
+
+    fun addEnchantment(bundle: EnchantBundle): ItemBuilder {
+        enchants.putAll(bundle.bundle())
+        return this
+    }
+
+    fun setUnbreakable(u: Boolean): ItemBuilder {
+        if (meta != null) meta.isUnbreakable = u
+        return this
+    }
+
+    fun build(): ItemStack {
+        if (meta != null) s.setItemMeta(meta)
+        for (m in enchants.keys) {
+            s.addUnsafeEnchantment(m!!, enchants[m]!!)
         }
-        this.nbti = new NBTItem(this.s);
+        nbti.mergeCustomNBT(s)
+        return s
     }
 
-    public static ItemBuilder builder(Material m) {
-        return new ItemBuilder(m);
+    fun setAmount(amount: Int): ItemBuilder {
+        s.amount = amount
+        return this
     }
 
-    public static ItemBuilder builder(ItemStack i) {
-        return new ItemBuilder(i);
-    }
-
-    public ItemBuilder setNbtTag(String key, Object value) {
-        nbti.setObject(key, value);
-        return this;
-    }
-
-    public ItemBuilder setName(String name) {
-        if (meta != null) meta.setDisplayName(name);
-        return this;
-    }
-
-    public ItemBuilder setLore(String... lore) {
-        if (meta != null) meta.setLore(Arrays.asList(lore));
-        return this;
-    }
-
-    public ItemBuilder addEnchantment(Enchantment e, int level) {
-        enchants.put(e, level);
-        return this;
-    }
-
-    public ItemBuilder addEnchantment(EnchantBundle bundle) {
-        enchants.putAll(bundle.bundle());
-        return this;
-    }
-
-    public ItemBuilder setUnbreakable(boolean u) {
-        if (meta != null) meta.setUnbreakable(u);
-        return this;
-    }
-
-    public ItemStack build() {
-        if (meta != null) s.setItemMeta(meta);
-        for (Enchantment m : enchants.keySet()) {
-            s.addUnsafeEnchantment(m, enchants.get(m));
+    companion object {
+        fun builder(m: Material?): ItemBuilder {
+            return ItemBuilder(m)
         }
-        nbti.mergeCustomNBT(s);
-        return s;
-    }
 
-    public ItemBuilder setAmount(int amount) {
-        s.setAmount(amount);
-        return this;
+        fun builder(i: ItemStack): ItemBuilder {
+            return ItemBuilder(i)
+        }
     }
 }

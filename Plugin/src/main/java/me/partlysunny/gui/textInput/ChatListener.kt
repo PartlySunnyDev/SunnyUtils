@@ -1,55 +1,52 @@
-package me.partlysunny.gui.textInput;
+package me.partlysunny.gui.textInput
 
-import me.partlysunny.SunnySpigotCore;
-import me.partlysunny.gui.GuiManager;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.plugin.java.JavaPlugin;
+import me.partlysunny.SunnySpigotCore
+import me.partlysunny.gui.GuiManager
+import org.bukkit.Bukkit
+import org.bukkit.entity.Player
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
+import org.bukkit.event.player.AsyncPlayerChatEvent
+import org.bukkit.plugin.java.JavaPlugin
+import java.util.*
+import java.util.function.Consumer
 
-import java.util.*;
-import java.util.function.Consumer;
-
-public class ChatListener implements Listener {
-
-    private static final Map<UUID, String> currentInput = new HashMap<>();
-    private static final Map<UUID, String> lastGui = new HashMap<>();
-    private static final List<UUID> typing = new ArrayList<>();
-    private static final Map<UUID, Consumer<Player>> todos = new HashMap<>();
-
-    public static void startChatListen(Player p, String redirectGui, String message, Consumer<Player> toDo) {
-        p.sendMessage(message);
-        typing.add(p.getUniqueId());
-        lastGui.put(p.getUniqueId(), redirectGui);
-        currentInput.remove(p.getUniqueId());
-        todos.put(p.getUniqueId(), toDo);
-    }
-
-    public static String getCurrentInput(Player p) {
-        String s = currentInput.get(p.getUniqueId());
-        currentInput.remove(p.getUniqueId());
-        return s;
-    }
-
+class ChatListener : Listener {
     @EventHandler
-    public void onChatMessage(AsyncPlayerChatEvent e) {
-        if (e.isAsynchronous()) {
-            UUID player = e.getPlayer().getUniqueId();
+    fun onChatMessage(e: AsyncPlayerChatEvent) {
+        if (e.isAsynchronous) {
+            val player = e.player.uniqueId
             if (typing.contains(player)) {
-                e.setCancelled(true);
-                currentInput.put(player, e.getMessage());
-                Bukkit.getScheduler().runTaskLater(JavaPlugin.getPlugin(SunnySpigotCore.class), () -> {
-                    GuiManager.openInventory(e.getPlayer(), lastGui.get(player));
-                    lastGui.remove(player);
-                }, 1);
-                todos.get(player).accept(e.getPlayer());
-                typing.remove(player);
-                todos.remove(player);
+                e.isCancelled = true
+                currentInput[player] = e.message
+                Bukkit.getScheduler().runTaskLater(JavaPlugin.getPlugin(SunnySpigotCore::class.java), Runnable {
+                    GuiManager.openInventory(e.player, lastGui[player])
+                    lastGui.remove(player)
+                }, 1)
+                todos[player]!!.accept(e.player)
+                typing.remove(player)
+                todos.remove(player)
             }
         }
     }
 
+    companion object {
+        private val currentInput: MutableMap<UUID, String> = HashMap()
+        private val lastGui: MutableMap<UUID, String> = HashMap()
+        private val typing: MutableList<UUID> = ArrayList()
+        private val todos: MutableMap<UUID, Consumer<Player>> = HashMap()
+        fun startChatListen(p: Player, redirectGui: String, message: String?, toDo: Consumer<Player>) {
+            p.sendMessage(message)
+            typing.add(p.uniqueId)
+            lastGui[p.uniqueId] = redirectGui
+            currentInput.remove(p.uniqueId)
+            todos[p.uniqueId] = toDo
+        }
 
+        fun getCurrentInput(p: Player): String? {
+            val s = currentInput[p.uniqueId]
+            currentInput.remove(p.uniqueId)
+            return s
+        }
+    }
 }

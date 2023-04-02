@@ -1,23 +1,18 @@
-package me.partlysunny.commands;
+package me.partlysunny.commands
 
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
-import org.jetbrains.annotations.NotNull;
+import org.bukkit.command.Command
+import org.bukkit.command.CommandSender
+import org.bukkit.command.TabCompleter
+import java.util.stream.Collectors
 
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
-
-public class STabCompleter implements TabCompleter {
-    @Override
-    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args) {
-        if (args.length == 1) {
-            String arg = args[args.length - 1];
-            return SCommand.subCommands.keySet().stream()
-                    .filter(s -> (arg.isEmpty() || s.startsWith(arg.toLowerCase(Locale.ENGLISH))))
-                    .collect(Collectors.toList());
+class STabCompleter : TabCompleter {
+    override fun onTabComplete(sender: CommandSender, cmd: Command, label: String, args: Array<String>): List<String>? {
+        if (args.size == 1) {
+            val arg = args[args.size - 1]
+            return SCommand.subCommands.keys.stream()
+                    .filter { s: String? -> arg.isEmpty() || s!!.startsWith(arg.lowercase()) }
+                    .collect(Collectors.toList<String>())
         }
-        return null;
+        return null
     }
 }

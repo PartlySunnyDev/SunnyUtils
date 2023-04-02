@@ -1,41 +1,30 @@
-package me.partlysunny.util.classes;
+package me.partlysunny.util.classes
 
-public class Pair<A, B> {
-
-    private A a;
-    private B b;
-
-    public Pair(A a, B b) {
-        this.a = a;
-        this.b = b;
+class Pair<A, B>(private var a: A, private var b: B) {
+    fun a(): A? {
+        return a
     }
 
-    public A a() {
-        return a;
+    fun setA(a: A) {
+        this.a = a
     }
 
-    public void setA(A a) {
-        this.a = a;
+    fun b(): B? {
+        return b
     }
 
-    public B b() {
-        return b;
+    fun setB(b: B) {
+        this.b = b
     }
 
-    public void setB(B b) {
-        this.b = b;
+    fun flushNulls(repA: A, repB: B) {
+        if (a() == null) setA(repA)
+        if (b() == null) setB(repB)
     }
 
-    public void flushNulls(A repA, B repB) {
-        if (a() == null) setA(repA);
-        if (b() == null) setB(repB);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof Pair)) {
-            return false;
-        }
-        return ((Pair<?, ?>) obj).a.equals(a) && ((Pair<?, ?>) obj).b.equals(b);
+    override fun equals(obj: Any?): Boolean {
+        return if (obj !is Pair<*, *>) {
+            false
+        } else obj.a == a && obj.b == b
     }
 }

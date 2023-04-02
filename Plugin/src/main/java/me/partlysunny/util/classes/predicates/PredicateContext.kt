@@ -1,27 +1,22 @@
-package me.partlysunny.util.classes.predicates;
+package me.partlysunny.util.classes.predicates
 
-import java.util.HashMap;
+class PredicateContext {
+    private val context = HashMap<String?, String?>()
 
-public class PredicateContext {
-
-    private final HashMap<String, String> context = new HashMap<>();
-
-    public PredicateContext() {
+    constructor()
+    constructor(init: HashMap<String?, String?>?) {
+        context.putAll(init!!)
     }
 
-    public PredicateContext(HashMap<String, String> init) {
-        context.putAll(init);
+    operator fun get(key: String?): String? {
+        return context[key]
     }
 
-    public String get(String key) {
-        return context.get(key);
+    operator fun set(key: String?, value: String?) {
+        context[key] = value
     }
 
-    public void set(String key, String value) {
-        context.put(key, value);
-    }
-
-    public void clear() {
-        context.clear();
+    fun clear() {
+        context.clear()
     }
 }

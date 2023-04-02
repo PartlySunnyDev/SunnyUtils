@@ -51,6 +51,7 @@ class SunnySpigotCore : JavaPlugin() {
         registerGuis()
         ConsoleLogger.console("Enabled SunnySpigotBase on version " + v.get())
     }
+
     override fun onDisable() {
         ConsoleLogger.console("Disabling SunnySpigotBase...")
         versionManager?.disable()

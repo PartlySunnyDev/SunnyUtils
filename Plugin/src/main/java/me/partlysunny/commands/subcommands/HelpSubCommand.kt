@@ -1,33 +1,22 @@
-package me.partlysunny.commands.subcommands;
+package me.partlysunny.commands.subcommands
 
-import me.partlysunny.commands.SCommand;
-import org.bukkit.ChatColor;
-import org.bukkit.command.CommandSender;
+import me.partlysunny.commands.SCommand
+import org.bukkit.ChatColor
+import org.bukkit.command.CommandSender
 
-import java.util.Collection;
+class HelpSubCommand : ISubCommand {
+    override val id: String
+        get() = "help"
+    override val description: String
+        get() = "Get a list of all commands."
+    override val usage: String
+        get() = ""
 
-public class HelpSubCommand implements ISubCommand {
-    @Override
-    public String getId() {
-        return "help";
-    }
-
-    @Override
-    public String getDescription() {
-        return "Get a list of all commands.";
-    }
-
-    @Override
-    public String getUsage() {
-        return "";
-    }
-
-    @Override
-    public void execute(CommandSender executor, String[] args) {
-        Collection<ISubCommand> commands = SCommand.subCommands.values();
-        executor.sendMessage(ChatColor.YELLOW + "List of commands (run with /sbl <command>):");
-        for (ISubCommand c : commands) {
-            executor.sendMessage(ChatColor.WHITE + c.getId() + c.getUsage() + ": " + c.getDescription());
+    override fun execute(executor: CommandSender, args: Array<String?>?) {
+        val commands: Collection<ISubCommand> = SCommand.Companion.subCommands.values
+        executor.sendMessage(ChatColor.YELLOW.toString() + "List of commands (run with /sbl <command>):")
+        for (c in commands) {
+            executor.sendMessage(ChatColor.WHITE.toString() + c.id + c.usage + ": " + c.description)
         }
     }
 }

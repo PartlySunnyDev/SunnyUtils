@@ -1,30 +1,26 @@
-package me.partlysunny.util.reflection;
+package me.partlysunny.util.reflection
 
-import java.util.Optional;
+import java.util.*
 
 /**
- * NOT BY ME!!! <a href="https://gist.github.com/Lauriichan/294c64b63067dcb6a9a8658f2d040256">https://gist.github.com/Lauriichan/294c64b63067dcb6a9a8658f2d040256</a>
+ * NOT BY ME!!! [https://gist.github.com/Lauriichan/294c64b63067dcb6a9a8658f2d040256](https://gist.github.com/Lauriichan/294c64b63067dcb6a9a8658f2d040256)
  */
-public final class JavaTracker {
-
-    private JavaTracker() {
-        throw new UnsupportedOperationException("Utility class");
+class JavaTracker private constructor() {
+    init {
+        throw UnsupportedOperationException("Utility class")
     }
 
-    private static StackTraceElement[] getStack() {
-        return new Throwable().getStackTrace();
-    }
+    companion object {
+        private val stack: Array<StackTraceElement>
+            private get() = Throwable().stackTrace
 
-    public static Optional<Class<?>> getClassFromStack(final int offset) {
-        final StackTraceElement element = getStack()[3 + offset];
-        if (element == null) {
-            return Optional.empty();
+        fun getClassFromStack(offset: Int): Class<*>? {
+            val element = stack[3 + offset]
+                    ?: return null
+            return JavaAccessor.getClass(element.className)
         }
-        return Optional.ofNullable(JavaAccessor.getClass(element.getClassName()));
-    }
 
-    public static Optional<Class<?>> getCallerClass() {
-        return getClassFromStack(1);
+        val callerClass: Class<*>?
+            get() = getClassFromStack(1)
     }
-
 }

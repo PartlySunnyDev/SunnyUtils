@@ -1,15 +1,10 @@
-package me.partlysunny.commands.subcommands;
+package me.partlysunny.commands.subcommands
 
-import org.bukkit.command.CommandSender;
+import org.bukkit.command.CommandSender
 
-public interface ISubCommand {
-
-    String getId();
-
-    String getDescription();
-
-    String getUsage();
-
-    void execute(CommandSender executor, String[] args);
-
+interface ISubCommand {
+    val id: String
+    val description: String
+    val usage: String
+    fun execute(executor: CommandSender, args: Array<String?>?)
 }

@@ -1,69 +1,60 @@
-package me.partlysunny.version;
+package me.partlysunny.version
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*
+import java.util.regex.Pattern
 
 //From https://github.com/iSach/UltraCosmetics/blob/master/core/src/main/java/be/isach/ultracosmetics/Version.java NOT BY ME!!!
-
 /**
  * Version.
  *
  * @author iSach
  */
-public class Version implements Comparable<Version> {
-    private static final Pattern VERSION_PATTERN = Pattern.compile("(?:\\d+\\.)+\\d+");
-    private final String version;
-    private final String versionString;
+class Version(version: String?) : Comparable<Version> {
+    private val version: String
+    private val versionString: String
 
-    public Version(String version) {
-        if (version == null)
-            throw new IllegalArgumentException("Version can not be null");
-        Matcher matcher = VERSION_PATTERN.matcher(version);
-        if (!matcher.find()) {
-            throw new IllegalArgumentException("Could not parse version string: '" + version + "'");
-        }
-        this.version = matcher.group();
-        this.versionString = version;
+    init {
+        requireNotNull(version) { "Version can not be null" }
+        val matcher = VERSION_PATTERN.matcher(version)
+        require(matcher.find()) { "Could not parse version string: '$version'" }
+        this.version = matcher.group()
+        versionString = version
     }
 
-    public final String get() {
-        return this.version;
+    fun get(): String {
+        return version
     }
 
-    @Override
-    public int compareTo(Version otherVersion) {
-        String[] thisParts = this.get().split("\\.");
-        String[] thatParts = otherVersion.get().split("\\.");
-        int length = Math.max(thisParts.length, thatParts.length);
-        for (int i = 0; i < length; i++) {
-            int thisPart = i < thisParts.length ?
-                    Integer.parseInt(thisParts[i]) : 0;
-            int thatPart = i < thatParts.length ?
-                    Integer.parseInt(thatParts[i]) : 0;
-            int cmp = Integer.compare(thisPart, thatPart);
+    override fun compareTo(otherVersion: Version): Int {
+        val thisParts = this.get().split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        val thatParts = otherVersion.get().split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        val length = Math.max(thisParts.size, thatParts.size)
+        for (i in 0 until length) {
+            val thisPart = if (i < thisParts.size) thisParts[i].toInt() else 0
+            val thatPart = if (i < thatParts.size) thatParts[i].toInt() else 0
+            val cmp = Integer.compare(thisPart, thatPart)
             if (cmp != 0) {
-                return cmp;
+                return cmp
             }
         }
         // release > dev build of same version
-        return Boolean.compare(this.isRelease(), otherVersion.isRelease());
+        return java.lang.Boolean.compare(isRelease, otherVersion.isRelease)
     }
 
-    public boolean isDev() {
-        return versionString.toLowerCase().contains("dev");
+    val isDev: Boolean
+        get() = versionString.lowercase(Locale.getDefault()).contains("dev")
+    val isRelease: Boolean
+        get() = !isDev
+
+    override fun equals(that: Any?): Boolean {
+        return this === that || that != null && this.javaClass == that.javaClass && this.compareTo(that as Version) == 0
     }
 
-    public boolean isRelease() {
-        return !isDev();
+    override fun hashCode(): Int {
+        return version.hashCode()
     }
 
-    @Override
-    public boolean equals(Object that) {
-        return this == that || that != null && this.getClass() == that.getClass() && this.compareTo((Version) that) == 0;
-    }
-
-    @Override
-    public int hashCode() {
-        return version.hashCode();
+    companion object {
+        private val VERSION_PATTERN = Pattern.compile("(?:\\d+\\.)+\\d+")
     }
 }

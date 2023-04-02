@@ -1,37 +1,36 @@
-package me.partlysunny.util;
+package me.partlysunny.util
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
-import me.partlysunny.SunnySpigotCore;
-import me.partlysunny.gui.textInput.ChatListener;
-import me.partlysunny.util.reflection.JavaAccessor;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.Sound;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionType;
-import org.bukkit.scheduler.BukkitScheduler;
-import org.bukkit.scheduler.BukkitTask;
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
+import com.mojang.authlib.GameProfile
+import com.mojang.authlib.properties.Property
+import me.partlysunny.SunnySpigotCore
+import me.partlysunny.gui.textInput.ChatListener
+import me.partlysunny.util.reflection.JavaAccessor
+import org.bukkit.Bukkit
+import org.bukkit.ChatColor
+import org.bukkit.Material
+import org.bukkit.Sound
+import org.bukkit.configuration.ConfigurationSection
+import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.SkullMeta
+import org.bukkit.plugin.java.JavaPlugin
+import org.bukkit.potion.PotionEffectType
+import org.bukkit.potion.PotionType
+import java.io.BufferedReader
+import java.io.File
+import java.io.IOException
+import java.io.InputStreamReader
+import java.net.URL
+import java.nio.file.Files
+import java.util.*
+import java.util.function.Consumer
+import java.util.regex.Pattern
 
-import java.io.*;
-import java.net.URL;
-import java.nio.file.Files;
-import java.util.*;
-import java.util.regex.Pattern;
-
-public final class Util {
-
-    public static final Random RAND = new Random();
+object Util {
+    val RAND = Random()
 
     /**
      * With this method you can get a player's head by nickname or a base64 head by base64 code
@@ -40,335 +39,323 @@ public final class Util {
      * @param value If you want a player's head, then the player's name. If you want base64, then base64 code.
      * @return Head itemStack
      */
-    public static ItemStack convert(HeadType type, String value) {
-        if (type.equals(HeadType.PLAYER_HEAD)) {
-            return getSkullByTexture(getPlayerHeadTexture(value));
+    fun convert(type: HeadType, value: String): ItemStack {
+        return if (type == HeadType.PLAYER_HEAD) {
+            getSkullByTexture(getPlayerHeadTexture(value))
         } else {
-            return getSkullByTexture(value);
+            getSkullByTexture(value)
         }
     }
 
-    private static ItemStack getSkullByTexture(String url) {
-        ItemStack head = getAllVersionStack("SKULL_ITEM", "PLAYER_HEAD");
-        if (url.isEmpty() || url.equals("none")) return head;
-
-        SkullMeta meta = (SkullMeta) head.getItemMeta();
-        GameProfile profile = new GameProfile(UUID.randomUUID(), "");
-        profile.getProperties().put("textures", new Property("textures", url));
+    private fun getSkullByTexture(url: String): ItemStack {
+        val head = getAllVersionStack("SKULL_ITEM", "PLAYER_HEAD")
+        if (url.isEmpty() || url == "none") return head
+        val meta = head.itemMeta as SkullMeta?
+        val profile = GameProfile(UUID.randomUUID(), "")
+        profile.properties.put("textures", Property("textures", url))
         try {
-            JavaAccessor.setValue(meta, JavaAccessor.getField(meta.getClass(), "profile"), profile);
-        } catch (IllegalArgumentException | SecurityException e) {
-            e.printStackTrace();
+            JavaAccessor.Companion.setValue(meta, JavaAccessor.Companion.getField(meta!!.javaClass, "profile"), profile)
+        } catch (e: IllegalArgumentException) {
+            e.printStackTrace()
+        } catch (e: SecurityException) {
+            e.printStackTrace()
         }
-        head.setItemMeta(meta);
-        return head;
+        head.setItemMeta(meta)
+        return head
     }
 
-    private static String getPlayerHeadTexture(String username) {
-        if (getPlayerId(username).equals("none")) return "none";
-        String url = "https://api.minetools.eu/profile/" + getPlayerId(username);
-        try {
-            String userData = readUrl(url);
-            Object parsedData = JsonParser.parseString(userData);
-
-            JsonObject jsonData = (JsonObject) parsedData;
-            JsonObject decoded = (JsonObject) jsonData.get("raw");
-            JsonArray textures = (JsonArray) decoded.get("properties");
-            JsonObject data = (JsonObject) textures.get(0);
-
-            return data.get("value").toString();
-        } catch (Exception ex) {
-            return "none";
+    private fun getPlayerHeadTexture(username: String): String {
+        if (getPlayerId(username) == "none") return "none"
+        val url = "https://api.minetools.eu/profile/" + getPlayerId(username)
+        return try {
+            val userData = readUrl(url)
+            val parsedData: Any = JsonParser.parseString(userData)
+            val jsonData = parsedData as JsonObject
+            val decoded = jsonData["raw"] as JsonObject
+            val textures = decoded["properties"] as JsonArray
+            val data = textures[0] as JsonObject
+            data["value"].toString()
+        } catch (ex: Exception) {
+            "none"
         }
     }
 
-    private static String readUrl(String urlString) throws Exception {
-        BufferedReader reader = null;
-        try {
-            URL url = new URL(urlString);
-            reader = new BufferedReader(new InputStreamReader(url.openStream()));
-            StringBuilder buffer = new StringBuilder();
-            int read;
-            char[] chars = new char[1024];
-            while ((read = reader.read(chars)) != -1) buffer.append(chars, 0, read);
-            return buffer.toString();
+    @Throws(Exception::class)
+    private fun readUrl(urlString: String): String {
+        var reader: BufferedReader? = null
+        return try {
+            val url = URL(urlString)
+            reader = BufferedReader(InputStreamReader(url.openStream()))
+            val buffer = StringBuilder()
+            var read: Int
+            val chars = CharArray(1024)
+            while (reader.read(chars).also { read = it } != -1) buffer.append(chars, 0, read)
+            buffer.toString()
         } finally {
-            if (reader != null) reader.close();
+            reader?.close()
         }
     }
 
-    private static String getPlayerId(String playerName) {
-        try {
-            String url = "https://api.minetools.eu/uuid/" + playerName;
-            String userData = readUrl(url);
-            Object parsedData = JsonParser.parseString(userData);
-
-            JsonObject jsonData = (JsonObject) parsedData;
-
-            if (jsonData.get("id") != null) return jsonData.get("id").toString();
-            return "";
-        } catch (Exception ex) {
-            return "none";
+    private fun getPlayerId(playerName: String): String {
+        return try {
+            val url = "https://api.minetools.eu/uuid/$playerName"
+            val userData = readUrl(url)
+            val parsedData: Any = JsonParser.parseString(userData)
+            val jsonData = parsedData as JsonObject
+            if (jsonData["id"] != null) jsonData["id"].toString() else ""
+        } catch (ex: Exception) {
+            "none"
         }
     }
 
-    private static ItemStack getAllVersionStack(String oldName, String newName) {
-        Material material = null;
-        try {
-            material = Material.valueOf(oldName);
-        } catch (Exception exception) {
-            material = Material.valueOf(newName);
+    private fun getAllVersionStack(oldName: String, newName: String): ItemStack {
+        var material: Material? = null
+        material = try {
+            Material.valueOf(oldName)
+        } catch (exception: Exception) {
+            Material.valueOf(newName)
         }
-        return new ItemStack(material, 1);
+        return ItemStack(material!!, 1)
     }
 
-    public static int getRandomBetween(int a, int b) {
-        if (a > b) {
-            throw new IllegalArgumentException("a must be higher than b");
-        }
+    fun getRandomBetween(a: Int, b: Int): Int {
+        require(a <= b) { "a must be higher than b" }
         if (a == b) {
-            return a;
+            return a
         }
         if (a < 0 && b < 0) {
-            return -getRandomBetween(-b, -a);
+            return -getRandomBetween(-b, -a)
         }
-        if (a < 0) {
-            return getRandomBetween(0, -a + b) + a;
-        }
-        return RAND.nextInt(b - a) + a;
+        return if (a < 0) {
+            getRandomBetween(0, -a + b) + a
+        } else RAND.nextInt(b - a) + a
     }
 
-    public static String processText(String text) {
-        if (text == null) {
-            return "";
-        }
-        return text.replace('&', ChatColor.COLOR_CHAR);
+    fun processText(text: String?): String {
+        return text?.replace('&', ChatColor.COLOR_CHAR) ?: ""
     }
 
-    public static void scheduleRepeatingCancelTask(Runnable r, long delay, long repeat, long stopAfter) {
-        BukkitScheduler scheduler = Bukkit.getScheduler();
-        JavaPlugin p = JavaPlugin.getPlugin(SunnySpigotCore.class);
-        BukkitTask t = scheduler.runTaskTimer(p, r, delay, repeat);
-        scheduler.runTaskLater(p, t::cancel, stopAfter);
+    fun scheduleRepeatingCancelTask(r: Runnable?, delay: Long, repeat: Long, stopAfter: Long) {
+        val scheduler = Bukkit.getScheduler()
+        val p: JavaPlugin = JavaPlugin.getPlugin(SunnySpigotCore::class.java)
+        val t = scheduler.runTaskTimer(p, r!!, delay, repeat)
+        scheduler.runTaskLater(p, Runnable { t.cancel() }, stopAfter)
     }
 
-    public static List<String> processTexts(List<String> texts) {
-        List<String> result = new ArrayList<>();
-        texts.forEach(n -> result.add(processText(n)));
-        return result;
+    fun processTexts(texts: List<String?>): List<String> {
+        val result: MutableList<String> = ArrayList()
+        texts.forEach(Consumer { n: String? -> result.add(processText(n)) })
+        return result
     }
 
-    public static <T> T getOrDefault(ConfigurationSection y, String key, T def) {
+    fun <T> getOrDefault(y: ConfigurationSection, key: String?, def: T): T? {
+        return if (y.contains(key!!)) {
+            y[key] as T?
+        } else def
+    }
+
+    fun <T> getOrError(y: ConfigurationSection, key: String): T? {
         if (y.contains(key)) {
-            return (T) y.get(key);
+            return y[key] as T?
         }
-        return def;
+        throw IllegalArgumentException("Key " + key + " inside " + y.name + " was not found!")
     }
 
-    public static <T> T getOrError(ConfigurationSection y, String key) {
-        if (y.contains(key)) {
-            return (T) y.get(key);
-        }
-        throw new IllegalArgumentException("Key " + key + " inside " + y.getName() + " was not found!");
-    }
-
-    public static boolean isInvalidFilePath(String path) {
-        File f = new File(path);
-        try {
-            f.getCanonicalPath();
-            return false;
-        } catch (IOException e) {
-            return true;
+    fun isInvalidFilePath(path: String?): Boolean {
+        val f = File(path)
+        return try {
+            f.canonicalPath
+            false
+        } catch (e: IOException) {
+            true
         }
     }
 
-    public static void copy(String source, File destination) throws IOException {
-        InputStream stream = SunnySpigotCore.class.getClassLoader().getResourceAsStream(source);
+    @Throws(IOException::class)
+    fun copy(source: String?, destination: File) {
+        val stream = SunnySpigotCore::class.java.classLoader.getResourceAsStream(source)
         if (!destination.exists()) {
-            Files.copy(stream, destination.toPath());
+            Files.copy(stream, destination.toPath())
         }
     }
 
-    public static List<String> splitLoreForLine(String input, String linePrefix, String lineSuffix, int width) {
-        char[] array = input.toCharArray();
-        List<String> out = new ArrayList<>();
-        String currentColor = "";
-        String cachedColor = "";
-        boolean wasColorChar = false;
-        StringBuilder currentLine = new StringBuilder(linePrefix);
-        StringBuilder currentWord = new StringBuilder();
-        for (int i = 0; i < array.length; i++) {
-            char c = array[i];
+    @JvmOverloads
+    fun splitLoreForLine(input: String, linePrefix: String = ChatColor.GRAY.toString(), lineSuffix: String = "", width: Int = 30): List<String> {
+        val array = input.toCharArray()
+        val out: MutableList<String> = ArrayList()
+        var currentColor = ""
+        var cachedColor = ""
+        var wasColorChar = false
+        var currentLine = StringBuilder(linePrefix)
+        var currentWord = StringBuilder()
+        for (i in array.indices) {
+            val c = array[i]
             if (wasColorChar) {
-                wasColorChar = false;
-                cachedColor = currentColor;
-                Pattern pattern = Pattern.compile("[0-9a-fkmolnr]");
-                if (pattern.matcher(c + "").matches()) {
+                wasColorChar = false
+                cachedColor = currentColor
+                val pattern = Pattern.compile("[0-9a-fkmolnr]")
+                if (pattern.matcher(c.toString() + "").matches()) {
                     if (c == 'r') {
-                        currentColor = ChatColor.COLOR_CHAR + "r";
+                        currentColor = ChatColor.COLOR_CHAR.toString() + "r"
                     } else {
-                        currentColor += ChatColor.COLOR_CHAR + "" + c;
+                        currentColor += ChatColor.COLOR_CHAR.toString() + "" + c
                     }
                 }
-                currentWord.append(ChatColor.COLOR_CHAR + "").append(c);
-                continue;
+                currentWord.append(ChatColor.COLOR_CHAR.toString() + "").append(c)
+                continue
             }
             if (c == '\n') {
-                currentLine.append(currentWord);
-                currentWord = new StringBuilder();
-                out.add(currentLine + lineSuffix);
-                currentLine = new StringBuilder(linePrefix + cachedColor + currentWord);
-                cachedColor = currentColor;
-                continue;
+                currentLine.append(currentWord)
+                currentWord = StringBuilder()
+                out.add(currentLine.toString() + lineSuffix)
+                currentLine = StringBuilder(linePrefix + cachedColor + currentWord)
+                cachedColor = currentColor
+                continue
             }
             if (c == ' ') {
-                if ((currentLine + currentWord.toString()).replaceAll("ยง[0-9a-fklmnor]", "").length() > width) {
-                    out.add(currentLine + lineSuffix);
-                    currentLine = new StringBuilder(linePrefix + cachedColor + currentWord + " ");
+                if ((currentLine.toString() + currentWord.toString()).replace("ยง[0-9a-fklmnor]".toRegex(), "").length > width) {
+                    out.add(currentLine.toString() + lineSuffix)
+                    currentLine = StringBuilder("$linePrefix$cachedColor$currentWord ")
                 } else {
-                    currentLine.append(currentWord).append(" ");
+                    currentLine.append(currentWord).append(" ")
                 }
-                cachedColor = currentColor;
-                currentWord = new StringBuilder();
-                continue;
+                cachedColor = currentColor
+                currentWord = StringBuilder()
+                continue
             }
             if (c == ChatColor.COLOR_CHAR) {
-                wasColorChar = true;
-                continue;
+                wasColorChar = true
+                continue
             }
-            currentWord.append(c);
+            currentWord.append(c)
         }
-        currentLine.append(currentWord);
-        out.add(currentLine + lineSuffix);
-        return out;
+        currentLine.append(currentWord)
+        out.add(currentLine.toString() + lineSuffix)
+        return out
     }
 
-    public static String[] getAlphabetSorted(String[] values) {
-        List<String> strings = new ArrayList<>(List.of(values));
-        Collections.sort(strings);
-        return strings.toArray(new String[0]);
+    fun getAlphabetSorted(values: Array<String?>): Array<String?>? {
+        val strings: List<String?> = listOf(*values)
+        strings.sortedWith { o1, o2 -> o1!!.compareTo(o2!!) }
+        return strings.toTypedArray<String?>()
     }
 
-    public static List<String> splitLoreForLine(String input) {
-        return splitLoreForLine(input, ChatColor.GRAY.toString(), "", 30);
-    }
-
-    public static double[] linspace(double min, double max, int points) {
-        double[] d = new double[points];
-        for (int i = 0; i < points; i++) {
-            d[i] = min + i * (max - min) / (points - 1);
+    fun linspace(min: Double, max: Double, points: Int): DoubleArray {
+        val d = DoubleArray(points)
+        for (i in 0 until points) {
+            d[i] = min + i * (max - min) / (points - 1)
         }
-        return d;
+        return d
     }
 
-    public static double[] fakeSpace(int points) {
-        return switch (points) {
-            case 0 -> new double[]{};
-            case 1 -> new double[]{4};
-            case 2 -> new double[]{3, 5};
-            case 3 -> new double[]{2, 4, 6};
-            case 4 -> new double[]{1, 3, 5, 7};
-            case 5 -> new double[]{2, 3, 4, 5, 6};
-            case 6 -> new double[]{1, 2, 3, 5, 6, 7};
-            case 7 -> new double[]{1, 2, 3, 4, 5, 6, 7};
-            case 8 -> new double[]{0, 1, 2, 3, 5, 6, 7, 8};
-            default -> new double[]{0, 1, 2, 3, 4, 5, 6, 7, 8};
-        };
+    fun fakeSpace(points: Int): DoubleArray {
+        return when (points) {
+            0 -> doubleArrayOf()
+            1 -> doubleArrayOf(4.0)
+            2 -> doubleArrayOf(3.0, 5.0)
+            3 -> doubleArrayOf(2.0, 4.0, 6.0)
+            4 -> doubleArrayOf(1.0, 3.0, 5.0, 7.0)
+            5 -> doubleArrayOf(2.0, 3.0, 4.0, 5.0, 6.0)
+            6 -> doubleArrayOf(1.0, 2.0, 3.0, 5.0, 6.0, 7.0)
+            7 -> doubleArrayOf(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0)
+            8 -> doubleArrayOf(0.0, 1.0, 2.0, 3.0, 5.0, 6.0, 7.0, 8.0)
+            else -> doubleArrayOf(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0)
+        }
     }
 
-    public static void invalid(String message, Player p) {
-        p.sendMessage(ChatColor.RED + message);
-        p.playSound(p.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
+    fun invalid(message: String, p: Player) {
+        p.sendMessage(ChatColor.RED.toString() + message)
+        p.playSound(p.location, Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f)
     }
 
-    public static void addLoreLine(ItemStack s, String... lines) {
-        ItemMeta m = s.getItemMeta();
-        List<String> lore = m.getLore();
+    fun addLoreLine(s: ItemStack, vararg lines: String?) {
+        val m = s.itemMeta
+        var lore = m!!.lore
         if (lore == null) {
-            lore = new ArrayList<>();
+            lore = ArrayList()
         }
-        lore.addAll(List.of(lines));
-        m.setLore(lore);
-        s.setItemMeta(m);
+        lore.addAll(java.util.List.of(*lines))
+        m.lore = lore
+        s.setItemMeta(m)
     }
 
-    public static void setName(ItemStack i, String name) {
-        ItemMeta m = i.getItemMeta();
-        if (m == null) {
-            return;
-        }
-        m.setDisplayName(name);
-        i.setItemMeta(m);
+    fun setName(i: ItemStack?, name: String?) {
+        val m = i!!.itemMeta ?: return
+        m.setDisplayName(name)
+        i.setItemMeta(m)
     }
 
-    public static Integer getTextInputAsInt(Player pl) {
-        String input = ChatListener.getCurrentInput(pl);
-        if (input.equals("cancel")) {
-            return null;
+    fun getTextInputAsInt(pl: Player): Int? {
+        val input: String? = ChatListener.getCurrentInput(pl)
+        if (input == "cancel") {
+            return null
         }
-        int currentInput;
-        try {
-            currentInput = Integer.parseInt(input);
-        } catch (NumberFormatException e) {
-            pl.sendMessage(ChatColor.RED + "Invalid number!");
-            return null;
+        val currentInput: Int
+        if (input != null) {
+            currentInput = try {
+                input.toInt()
+            } catch (e: NumberFormatException) {
+                pl.sendMessage(ChatColor.RED.toString() + "Invalid number!")
+                return null
+            }
+            if (currentInput < 1) {
+                pl.sendMessage("Must be greater than 1!")
+                return null
+            }
+            return currentInput
         }
-        if (currentInput < 1) {
-            pl.sendMessage("Must be greater than 1!");
-            return null;
-        }
-        return currentInput;
+        return null
     }
 
-    public static Double getTextInputAsDouble(Player pl) {
-        String input = ChatListener.getCurrentInput(pl);
-        if (input.equals("cancel")) {
-            return null;
+    fun getTextInputAsDouble(pl: Player): Double? {
+        val input: String? = ChatListener.getCurrentInput(pl)
+        if (input == "cancel") {
+            return null
         }
-        double currentInput;
-        try {
-            currentInput = Double.parseDouble(input);
-        } catch (NumberFormatException e) {
-            pl.sendMessage(ChatColor.RED + "Invalid number!");
-            return null;
+        val currentInput: Double
+        if (input != null) {
+            currentInput = try {
+                input.toDouble()
+            } catch (e: NumberFormatException) {
+                pl.sendMessage(ChatColor.RED.toString() + "Invalid number!")
+                return null
+            }
+            if (currentInput < 0) {
+                pl.sendMessage("Must be greater than 0!")
+                return null
+            }
+            return currentInput
         }
-        if (currentInput < 0) {
-            pl.sendMessage("Must be greater than 0!");
-            return null;
-        }
-        return currentInput;
+        return null
     }
 
-    public static void setLore(ItemStack i, List<String> lore) {
-        ItemMeta m = i.getItemMeta();
-        if (m == null) {
-            return;
-        }
-        m.setLore(lore);
-        i.setItemMeta(m);
+    fun setLore(i: ItemStack?, lore: List<String?>?) {
+        val m = i!!.itemMeta ?: return
+        m.lore = lore
+        i.setItemMeta(m)
     }
 
-    public static PotionType asType(PotionEffectType t) {
+    fun asType(t: PotionEffectType?): PotionType {
         if (t == null) {
-            return PotionType.WATER;
+            return PotionType.WATER
         }
-        PotionType asType = PotionType.WATER;
-        for (PotionType type : PotionType.values()) {
-            if (t.equals(type.getEffectType())) asType = type;
+        var asType = PotionType.WATER
+        for (type in PotionType.values()) {
+            if (t == type.effectType) asType = type
         }
-        return asType;
+        return asType
     }
 
-    public static void deleteFile(File f) {
-        if (f.exists() && !f.isDirectory()) {
-            f.delete();
+    fun deleteFile(f: File) {
+        if (f.exists() && !f.isDirectory) {
+            f.delete()
         }
     }
 
     /**
      * Generation head type enum
      */
-    public enum HeadType {
+    enum class HeadType {
         PLAYER_HEAD,
         BASE64
     }

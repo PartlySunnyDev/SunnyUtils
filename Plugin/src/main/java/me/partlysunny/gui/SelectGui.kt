@@ -1,45 +1,39 @@
-package me.partlysunny.gui;
+package me.partlysunny.gui
 
-import org.bukkit.entity.Player;
+import org.bukkit.entity.Player
+import java.util.*
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-public abstract class SelectGui<T> implements GuiInstance {
-
-    protected final Map<UUID, T> values = new HashMap<>();
-    protected final Map<UUID, String> guiToReturn = new HashMap<>();
-
-    public T getValue(UUID player) {
-        return values.get(player);
+abstract class SelectGui<T> : GuiInstance {
+    protected val values: MutableMap<UUID, T> = HashMap()
+    protected val guiToReturn: MutableMap<UUID, String> = HashMap()
+    fun getValue(player: UUID): T? {
+        return values[player]
     }
 
-    public void returnTo(Player player) {
-        GuiManager.openInventory(player, guiToReturn.get(player.getUniqueId()));
+    fun returnTo(player: Player) {
+        GuiManager.openInventory(player, guiToReturn[player.uniqueId])
     }
 
-    public void resetValue(UUID player) {
-        values.remove(player);
+    fun resetValue(player: UUID) {
+        values.remove(player)
     }
 
-    public void update(UUID player, String value) {
-        values.put(player, getValueFromString(value));
+    fun update(player: UUID, value: String) {
+        values[player] = getValueFromString(value)
     }
 
-    public void setReturnTo(UUID player, String gui) {
-        guiToReturn.put(player, gui);
+    fun setReturnTo(player: UUID, gui: String) {
+        guiToReturn[player] = gui
     }
 
-    public String getReturnTo(Player p) {
-        return guiToReturn.get(p.getUniqueId());
+    fun getReturnTo(p: Player): String? {
+        return guiToReturn[p.uniqueId]
     }
 
-    public void openWithValue(Player p, T value, String name) {
-        this.values.put(p.getUniqueId(), value);
-        GuiManager.openInventory(p, name);
+    fun openWithValue(p: Player, value: T, name: String?) {
+        values[p.uniqueId] = value
+        GuiManager.openInventory(p, name)
     }
 
-    protected abstract T getValueFromString(String s);
-
+    protected abstract fun getValueFromString(s: String): T
 }

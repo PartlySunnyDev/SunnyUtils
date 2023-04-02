@@ -1,86 +1,49 @@
-package me.partlysunny.util.classes;
+package me.partlysunny.util.classes
 
-import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.util.*
+import java.util.function.Predicate
+import java.util.stream.Collectors
 
-public class RandomList<E> extends ArrayList<RandomList<E>.RandomCollectionObject<E>> {
+class RandomCollectionObject<T>(val `object`: T, val weight: Double)
 
-    private final Random random;
+class RandomList<E> @JvmOverloads constructor(private val random: Random = Random()) : ArrayList<RandomCollectionObject<E>>() {
 
-    public RandomList() {
-        this(new Random());
+    constructor(c: Collection<RandomCollectionObject<E>>?) : this() {
+        addAll(c!!)
     }
 
-    public RandomList(Collection<? extends RandomCollectionObject<E>> c) {
-        this();
-        addAll(c);
+    fun add(e: E, chance: Double): Boolean {
+        return this.add(RandomCollectionObject(e, chance))
     }
 
-    public RandomList(Random random) {
-        this.random = random;
+    fun remove(o: Any): Boolean {
+        return (clone() as RandomList<*>).stream().anyMatch { t: RandomCollectionObject<out Any?>? -> (t?.`object` == o) && remove(t) }
     }
 
-    public Random getRandom() {
-        return random;
+    fun totalWeight(): Double {
+        return stream().mapToDouble { obj: RandomCollectionObject<E> -> obj.weight }.sum()
     }
 
-    public boolean add(E e, double chance) {
-        return this.add(new RandomCollectionObject<E>(e, chance));
+    fun raffle(): E {
+        return raffle(this)
     }
 
-    @Override
-    public boolean remove(Object o) {
-        return ((RandomList<Object>) this.clone()).stream().anyMatch((t) -> t.object.equals(o) && super.remove(t));
-    }
-
-    public double totalWeight() {
-        return this.stream().mapToDouble(RandomCollectionObject::getWeight).sum();
-    }
-
-    public E raffle() {
-        return raffle(this);
-    }
-
-    public E raffle(Predicate<RandomCollectionObject<E>> predicate) {
-        RandomList<E> aux = this.stream()
+    fun raffle(predicate: Predicate<RandomCollectionObject<E>?>?): E {
+        val aux = stream()
                 .filter(predicate)
-                .collect(Collectors.toCollection(RandomList::new));
-
-        return raffle(aux);
+                .collect(Collectors.toCollection<RandomCollectionObject<E>, RandomList<E>>({ RandomList() }))
+        return raffle(aux)
     }
 
-    private E raffle(RandomList<E> list) {
-        NavigableMap<Double, RandomCollectionObject<E>> auxMap = new TreeMap<>();
-
-        list.forEach((rco) -> {
-            double auxWeight = auxMap.values().stream().mapToDouble(RandomCollectionObject::getWeight).sum();
-            auxWeight += rco.getWeight();
-
-            auxMap.put(auxWeight, rco);
-        });
-
-        double totalWeight = list.getRandom().nextDouble() * auxMap.values().stream().mapToDouble(RandomCollectionObject::getWeight).sum();
-
-        return auxMap.ceilingEntry(totalWeight).getValue().getObject();
+    private fun raffle(list: RandomList<E>): E {
+        val auxMap: NavigableMap<Double, RandomCollectionObject<E>> = TreeMap()
+        list.forEach { rco: RandomCollectionObject<E> ->
+            var auxWeight = auxMap.values.stream().mapToDouble { obj: RandomCollectionObject<E> -> obj.weight }.sum()
+            auxWeight += rco.weight
+            auxMap[auxWeight] = rco
+        }
+        val totalWeight = list.random.nextDouble() * auxMap.values.stream().mapToDouble { obj: RandomCollectionObject<E> -> obj.weight }.sum()
+        return auxMap.ceilingEntry(totalWeight).value.`object`
     }
 
-    public class RandomCollectionObject<T> {
-
-        private final T object;
-        private final Double weight;
-
-        private RandomCollectionObject(T e, Double weight) {
-            this.object = e;
-            this.weight = weight;
-        }
-
-        public T getObject() {
-            return this.object;
-        }
-
-        public Double getWeight() {
-            return this.weight;
-        }
-    }
 }
