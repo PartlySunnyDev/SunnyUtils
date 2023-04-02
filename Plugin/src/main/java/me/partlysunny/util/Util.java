@@ -5,7 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import me.partlysunny.SunnySpigotBaseCore;
+import me.partlysunny.SunnySpigotCore;
 import me.partlysunny.gui.textInput.ChatListener;
 import me.partlysunny.util.reflection.JavaAccessor;
 import org.bukkit.Bukkit;
@@ -147,7 +147,7 @@ public final class Util {
 
     public static void scheduleRepeatingCancelTask(Runnable r, long delay, long repeat, long stopAfter) {
         BukkitScheduler scheduler = Bukkit.getScheduler();
-        JavaPlugin p = JavaPlugin.getPlugin(SunnySpigotBaseCore.class);
+        JavaPlugin p = JavaPlugin.getPlugin(SunnySpigotCore.class);
         BukkitTask t = scheduler.runTaskTimer(p, r, delay, repeat);
         scheduler.runTaskLater(p, t::cancel, stopAfter);
     }
@@ -183,7 +183,7 @@ public final class Util {
     }
 
     public static void copy(String source, File destination) throws IOException {
-        InputStream stream = SunnySpigotBaseCore.class.getClassLoader().getResourceAsStream(source);
+        InputStream stream = SunnySpigotCore.class.getClassLoader().getResourceAsStream(source);
         if (!destination.exists()) {
             Files.copy(stream, destination.toPath());
         }

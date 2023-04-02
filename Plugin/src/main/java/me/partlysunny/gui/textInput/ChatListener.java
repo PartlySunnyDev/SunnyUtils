@@ -1,6 +1,6 @@
 package me.partlysunny.gui.textInput;
 
-import me.partlysunny.SunnySpigotBaseCore;
+import me.partlysunny.SunnySpigotCore;
 import me.partlysunny.gui.GuiManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -40,7 +40,7 @@ public class ChatListener implements Listener {
             if (typing.contains(player)) {
                 e.setCancelled(true);
                 currentInput.put(player, e.getMessage());
-                Bukkit.getScheduler().runTaskLater(JavaPlugin.getPlugin(SunnySpigotBaseCore.class), () -> {
+                Bukkit.getScheduler().runTaskLater(JavaPlugin.getPlugin(SunnySpigotCore.class), () -> {
                     GuiManager.openInventory(e.getPlayer(), lastGui.get(player));
                     lastGui.remove(player);
                 }, 1);

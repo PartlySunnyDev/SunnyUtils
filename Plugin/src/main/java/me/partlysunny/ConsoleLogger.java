@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 
 public class ConsoleLogger {
 
-    private static final Logger log = JavaPlugin.getPlugin(SunnySpigotBaseCore.class).getLogger();
+    private static final Logger log = JavaPlugin.getPlugin(SunnySpigotCore.class).getLogger();
 
     public static void console(String msg) {
         log.info(msg);
