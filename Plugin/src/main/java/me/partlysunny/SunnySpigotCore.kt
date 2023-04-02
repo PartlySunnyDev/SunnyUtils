@@ -31,7 +31,10 @@ class SunnySpigotCore : JavaPlugin() {
         try {
             versionManager!!.load()
         } catch (e: ReflectiveOperationException) {
-            ConsoleLogger.error("This version (" + v.get() + ") is not supported by SunnySpigotBase!", "Shutting down plugin...")
+            ConsoleLogger.error(
+                "This version (" + v.get() + ") is not supported by SunnySpigotBase!",
+                "Shutting down plugin..."
+            )
             isEnabled = false
             return
         }

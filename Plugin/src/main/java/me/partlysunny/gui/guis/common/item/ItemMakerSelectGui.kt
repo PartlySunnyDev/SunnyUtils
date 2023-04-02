@@ -48,14 +48,40 @@ class ItemMakerSelectGui : SelectGui<ItemStack>() {
         if (lore == null) {
             lore = ArrayList()
         }
-        IFUtil.addSelectionLink(mainPane, p, "itemMakerSelect", "materialSelect", ItemBuilder.Companion.builder(mat).setName(mat.name).build(), 1, 1)
+        IFUtil.addSelectionLink(
+            mainPane,
+            p,
+            "itemMakerSelect",
+            "materialSelect",
+            ItemBuilder.Companion.builder(mat).setName(mat.name).build(),
+            1,
+            1
+        )
         val finalCurrent = current
-        mainPane.addItem(GuiItem(ItemBuilder.Companion.builder(Material.ENCHANTED_BOOK).setName(ChatColor.LIGHT_PURPLE.toString() + "Modify Enchants").build()) { x: InventoryClickEvent? ->
-            SelectGuiManager.getSelectGui("enchantModifier").setReturnTo(p.getUniqueId(), "itemMakerSelect")
-            p.closeInventory()
-            (SelectGuiManager.getSelectGui("enchantModifier") as SelectGui<ItemStack?>).openWithValue(p, finalCurrent, "enchantModifierSelect")
-        }, 3, 1)
-        IFUtil.addTextInputLink(mainPane, p, "itemMakerSelect", ChatColor.RED.toString() + "Input new item name:", ItemBuilder.Companion.builder(Material.PAPER).setName(ChatColor.GRAY.toString() + "Change Name").setLore(ChatColor.GRAY.toString() + "Current Name: " + name).build(), 5, 1) { pl: Player ->
+        mainPane.addItem(
+            GuiItem(
+                ItemBuilder.Companion.builder(Material.ENCHANTED_BOOK)
+                    .setName(ChatColor.LIGHT_PURPLE.toString() + "Modify Enchants").build()
+            ) { x: InventoryClickEvent? ->
+                SelectGuiManager.getSelectGui("enchantModifier").setReturnTo(p.getUniqueId(), "itemMakerSelect")
+                p.closeInventory()
+                (SelectGuiManager.getSelectGui("enchantModifier") as SelectGui<ItemStack?>).openWithValue(
+                    p,
+                    finalCurrent,
+                    "enchantModifierSelect"
+                )
+            }, 3, 1
+        )
+        IFUtil.addTextInputLink(
+            mainPane,
+            p,
+            "itemMakerSelect",
+            ChatColor.RED.toString() + "Input new item name:",
+            ItemBuilder.Companion.builder(Material.PAPER).setName(ChatColor.GRAY.toString() + "Change Name")
+                .setLore(ChatColor.GRAY.toString() + "Current Name: " + name).build(),
+            5,
+            1
+        ) { pl: Player ->
             val hasValue = values.containsKey(pl.uniqueId)
             val input = Util.processText(ChatListener.Companion.getCurrentInput(pl))
             if (input!!.length < 2 || input.length > 30) {
@@ -67,7 +93,16 @@ class ItemMakerSelectGui : SelectGui<ItemStack>() {
             }
             Util.setName(values[pl.uniqueId], input)
         }
-        IFUtil.addTextInputLink(mainPane, p, "itemMakerSelect", ChatColor.RED.toString() + "Input new lore (will auto wrap):", ItemBuilder.Companion.builder(Material.PAPER).setName(ChatColor.GRAY.toString() + "Change Lore").setLore(*lore.toTypedArray<String?>()).build(), 7, 1) { pl: Player ->
+        IFUtil.addTextInputLink(
+            mainPane,
+            p,
+            "itemMakerSelect",
+            ChatColor.RED.toString() + "Input new lore (will auto wrap):",
+            ItemBuilder.Companion.builder(Material.PAPER).setName(ChatColor.GRAY.toString() + "Change Lore")
+                .setLore(*lore.toTypedArray<String?>()).build(),
+            7,
+            1
+        ) { pl: Player ->
             val hasValue = values.containsKey(pl.uniqueId)
             val input = Util.processText(ChatListener.Companion.getCurrentInput(pl))
             if (input!!.length < 2) {
@@ -79,14 +114,23 @@ class ItemMakerSelectGui : SelectGui<ItemStack>() {
             }
             Util.setLore(values[pl.uniqueId], splitLoreForLine(input))
         }
-        mainPane.addItem(GuiItem(ItemBuilder.Companion.builder(Material.ARROW).setName(ChatColor.GREEN.toString() + "Back").build()) { item: InventoryClickEvent? ->
-            resetValue(p.getUniqueId())
-            GuiManager.openInventory(p, getReturnTo(p))
-        }, 0, 2)
-        mainPane.addItem(GuiItem(ItemBuilder.Companion.builder(Material.GREEN_CONCRETE).setName(ChatColor.GREEN.toString() + "Confirm").build()) { item: InventoryClickEvent? ->
-            p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f)
-            GuiManager.openInventory(p, getReturnTo(p))
-        }, 8, 1)
+        mainPane.addItem(
+            GuiItem(
+                ItemBuilder.Companion.builder(Material.ARROW).setName(ChatColor.GREEN.toString() + "Back").build()
+            ) { item: InventoryClickEvent? ->
+                resetValue(p.getUniqueId())
+                GuiManager.openInventory(p, getReturnTo(p))
+            }, 0, 2
+        )
+        mainPane.addItem(
+            GuiItem(
+                ItemBuilder.Companion.builder(Material.GREEN_CONCRETE).setName(ChatColor.GREEN.toString() + "Confirm")
+                    .build()
+            ) { item: InventoryClickEvent? ->
+                p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f)
+                GuiManager.openInventory(p, getReturnTo(p))
+            }, 8, 1
+        )
         IFUtil.setClickSoundTo(Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_OFF, gui)
         gui.addPane(mainPane)
         return gui

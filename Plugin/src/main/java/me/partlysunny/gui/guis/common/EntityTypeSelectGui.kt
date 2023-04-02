@@ -19,10 +19,8 @@ class EntityTypeSelectGui : SelectGui<EntityType>() {
         val gui = ChestGui(5, ChatColor.GRAY.toString() + "Select Entity Type")
         val pane = PaginatedPane(0, 0, 9, 5)
         val entityList = arrayOfNulls<String>(EntityType.values().size)
-        var count = 0
-        for (e in EntityType.values()) {
+        for ((count, e) in EntityType.values().withIndex()) {
             entityList[count] = e.toString()
-            count++
         }
         IFUtil.addListPages(pane, p, this, 1, 1, 7, 3, Util.getAlphabetSorted(entityList), gui)
         gui.addPane(pane)

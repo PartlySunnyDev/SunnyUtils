@@ -15,12 +15,12 @@ class SCommand : CommandExecutor {
                 commandSender.sendMessage(ChatColor.RED.toString() + "You cannot use this command!")
                 return true
             }
-            if (strings.size == 0) {
+            if (strings.isEmpty()) {
                 executeSubCommand("help", commandSender, arrayOf())
                 return true
             }
             val subCommand = strings[0]
-            val newArgs = ArrayList(Arrays.asList(*strings))
+            val newArgs = ArrayList(listOf(*strings))
             newArgs.removeAt(0)
             if (!executeSubCommand(subCommand, commandSender, newArgs.toTypedArray<String?>())) {
                 commandSender.sendMessage(ChatColor.RED.toString() + "That command does not exist!")

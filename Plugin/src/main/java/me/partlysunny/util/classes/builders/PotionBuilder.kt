@@ -8,7 +8,6 @@ import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionType
-import java.lang.IllegalStateException
 import java.util.*
 
 class PotionBuilder(f: PotionFormat?) {

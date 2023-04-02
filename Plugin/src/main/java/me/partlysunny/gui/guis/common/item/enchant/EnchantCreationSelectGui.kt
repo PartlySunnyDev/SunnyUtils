@@ -39,8 +39,25 @@ class EnchantCreationSelectGui : SelectGui<EnchantContainer>() {
         values[p.getUniqueId()] = c!!
         val mainPane = StaticPane(0, 0, 9, 3)
         mainPane.fillWith(ItemStack(Material.GRAY_STAINED_GLASS_PANE))
-        IFUtil.addSelectionLink(mainPane, p, "enchantCreationSelect", "enchantmentSelect", ItemBuilder.Companion.builder(Material.ENCHANTED_BOOK).addEnchantment(c.enchant(), c.lvl()).build(), 3, 1)
-        IFUtil.addTextInputLink(mainPane, p, "enchantCreationSelect", ChatColor.RED.toString() + "Enter enchant lvl or \"cancel\" to cancel", ItemBuilder.Companion.builder(Material.PAPER).setName(ChatColor.GRAY.toString() + "Change LVL").setLore(ChatColor.DARK_GRAY.toString() + "Current lvl: " + c.lvl()).build(), 5, 1) { pl: Player ->
+        IFUtil.addSelectionLink(
+            mainPane,
+            p,
+            "enchantCreationSelect",
+            "enchantmentSelect",
+            ItemBuilder.Companion.builder(Material.ENCHANTED_BOOK).addEnchantment(c.enchant(), c.lvl()).build(),
+            3,
+            1
+        )
+        IFUtil.addTextInputLink(
+            mainPane,
+            p,
+            "enchantCreationSelect",
+            ChatColor.RED.toString() + "Enter enchant lvl or \"cancel\" to cancel",
+            ItemBuilder.Companion.builder(Material.PAPER).setName(ChatColor.GRAY.toString() + "Change LVL")
+                .setLore(ChatColor.DARK_GRAY.toString() + "Current lvl: " + c.lvl()).build(),
+            5,
+            1
+        ) { pl: Player ->
             val hasValue = values.containsKey(pl.uniqueId)
             val currentInput = Util.getTextInputAsInt(pl)
             if (currentInput == null) {
@@ -53,15 +70,27 @@ class EnchantCreationSelectGui : SelectGui<EnchantContainer>() {
                 values[pl.uniqueId] = EnchantContainer(Enchantment.ARROW_DAMAGE, currentInput)
             }
         }
-        mainPane.addItem(GuiItem(ItemBuilder.Companion.builder(Material.ARROW).setName(ChatColor.GREEN.toString() + "Back").build()) { item: InventoryClickEvent? ->
-            resetValue(p.getUniqueId())
-            GuiManager.openInventory(p, getReturnTo(p))
-        }, 0, 2)
-        mainPane.addItem(GuiItem(ItemBuilder.Companion.builder(Material.GREEN_CONCRETE).setName(ChatColor.GREEN.toString() + "Confirm").build()) { item: InventoryClickEvent? ->
-            p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f)
-            (SelectGuiManager.getSelectGui("enchantModifier") as EnchantModifierSelectGui).addEnchantTo(p.getUniqueId(), getValue(p.getUniqueId()))
-            GuiManager.openInventory(p, getReturnTo(p))
-        }, 8, 1)
+        mainPane.addItem(
+            GuiItem(
+                ItemBuilder.Companion.builder(Material.ARROW).setName(ChatColor.GREEN.toString() + "Back").build()
+            ) { item: InventoryClickEvent? ->
+                resetValue(p.getUniqueId())
+                GuiManager.openInventory(p, getReturnTo(p))
+            }, 0, 2
+        )
+        mainPane.addItem(
+            GuiItem(
+                ItemBuilder.Companion.builder(Material.GREEN_CONCRETE).setName(ChatColor.GREEN.toString() + "Confirm")
+                    .build()
+            ) { item: InventoryClickEvent? ->
+                p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f)
+                (SelectGuiManager.getSelectGui("enchantModifier") as EnchantModifierSelectGui).addEnchantTo(
+                    p.getUniqueId(),
+                    getValue(p.getUniqueId())
+                )
+                GuiManager.openInventory(p, getReturnTo(p))
+            }, 8, 1
+        )
         gui.addPane(mainPane)
         IFUtil.setClickSoundTo(Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_OFF, gui)
         return gui

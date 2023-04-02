@@ -10,8 +10,8 @@ class STabCompleter : TabCompleter {
         if (args.size == 1) {
             val arg = args[args.size - 1]
             return SCommand.subCommands.keys.stream()
-                    .filter { s: String? -> arg.isEmpty() || s!!.startsWith(arg.lowercase()) }
-                    .collect(Collectors.toList<String>())
+                .filter { s: String? -> arg.isEmpty() || s!!.startsWith(arg.lowercase()) }
+                .collect(Collectors.toList<String>())
         }
         return null
     }

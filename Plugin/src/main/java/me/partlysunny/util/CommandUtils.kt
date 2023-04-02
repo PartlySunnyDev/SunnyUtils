@@ -284,7 +284,8 @@ object CommandUtils {
 
     private fun getTags(arg: String): Array<String?> {
         if (!arg.contains("[")) return arrayOfNulls(0)
-        val tags = arg.split("\\[".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1].split("\\]".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0]
+        val tags = arg.split("\\[".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1].split("\\]".toRegex())
+            .dropLastWhile { it.isEmpty() }.toTypedArray()[0]
         return tags.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
     }
 
@@ -302,7 +303,8 @@ object CommandUtils {
                         2 -> total *= intString.toInt()
                         3 -> total /= intString.toInt()
                     }
-                    mode = (if (arg[i] == '+') 0 else if (arg[i] == '-') 1 else if (arg[i] == '*') 2 else if (arg[i] == '/') 3 else -1)
+                    mode =
+                        (if (arg[i] == '+') 0 else if (arg[i] == '-') 1 else if (arg[i] == '*') 2 else if (arg[i] == '/') 3 else -1)
                 } catch (e: Exception) {
                     Bukkit.getLogger().severe("There has been an issue with a plugin using the CommandUtils class!")
                 }
@@ -340,7 +342,8 @@ object CommandUtils {
     }
 
     private fun getType(arg: String?): String {
-        return if (hasTag(SelectorType.TYPE, arg)) arg!!.lowercase(Locale.getDefault()).split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1].replace("!", "") else "Player"
+        return if (hasTag(SelectorType.TYPE, arg)) arg!!.lowercase(Locale.getDefault()).split("=".toRegex())
+            .dropLastWhile { it.isEmpty() }.toTypedArray()[1].replace("!", "") else "Player"
     }
 
     private fun getName(arg: String?): String? {
@@ -353,7 +356,10 @@ object CommandUtils {
     }
 
     private fun getScoreMinName(arg: String?): String {
-        return arg!!.split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0].substring(0, arg.split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0].length - 1 - 4).replace("score_", "")
+        return arg!!.split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0].substring(
+            0,
+            arg.split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0].length - 1 - 4
+        ).replace("score_", "")
     }
 
     private fun getScoreName(arg: String?): String {
@@ -361,7 +367,8 @@ object CommandUtils {
     }
 
     private fun getTeam(arg: String?): String {
-        return arg!!.lowercase(Locale.getDefault()).replace("!", "").split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1]
+        return arg!!.lowercase(Locale.getDefault()).replace("!", "").split("=".toRegex()).dropLastWhile { it.isEmpty() }
+            .toTypedArray()[1]
     }
 
     private fun getValueAsFloat(arg: String?): Float {
@@ -373,16 +380,22 @@ object CommandUtils {
     }
 
     private fun getM(arg: String?): GameMode? {
-        val split = arg!!.replace("!", "").lowercase(Locale.getDefault()).split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        val split =
+            arg!!.replace("!", "").lowercase(Locale.getDefault()).split("=".toRegex()).dropLastWhile { it.isEmpty() }
+                .toTypedArray()
         val returnType = split[1]
         if (returnType.equals("0", ignoreCase = true) || returnType.equals("s", ignoreCase = true)
-                || returnType.equals("survival", ignoreCase = true)) return GameMode.SURVIVAL
+            || returnType.equals("survival", ignoreCase = true)
+        ) return GameMode.SURVIVAL
         if (returnType.equals("1", ignoreCase = true) || returnType.equals("c", ignoreCase = true)
-                || returnType.equals("creative", ignoreCase = true)) return GameMode.CREATIVE
+            || returnType.equals("creative", ignoreCase = true)
+        ) return GameMode.CREATIVE
         if (returnType.equals("2", ignoreCase = true) || returnType.equals("a", ignoreCase = true)
-                || returnType.equals("adventure", ignoreCase = true)) return GameMode.ADVENTURE
+            || returnType.equals("adventure", ignoreCase = true)
+        ) return GameMode.ADVENTURE
         return if (returnType.equals("3", ignoreCase = true) || returnType.equals("sp", ignoreCase = true)
-                || returnType.equals("spectator", ignoreCase = true)) GameMode.SPECTATOR else null
+            || returnType.equals("spectator", ignoreCase = true)
+        ) GameMode.SPECTATOR else null
     }
 
     private fun getAcceptedWorldsFullString(loc: Location?, fullString: String): List<World?> {
@@ -490,13 +503,21 @@ object CommandUtils {
 
     private fun isScoreWithin(arg: String?, e: Entity): Boolean {
         if (e !is Player) return false
-        val scores = arg!!.split("\\{".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1].split("\\}".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0].split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        val scores =
+            arg!!.split("\\{".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1].split("\\}".toRegex())
+                .dropLastWhile { it.isEmpty() }.toTypedArray()[0].split(",".toRegex()).dropLastWhile { it.isEmpty() }
+                .toTypedArray()
         for (i in scores.indices) {
             val s = scores[i].split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
             val name = s[0]
             for (o in Bukkit.getScoreboardManager()!!.mainScoreboard.objectives) {
                 if (o.name.equals(name, ignoreCase = true)) {
-                    if (!isWithinDoubleValue(isInverted(arg), s[1], o.getScore(e.getName()).score.toDouble())) return false
+                    if (!isWithinDoubleValue(
+                            isInverted(arg),
+                            s[1],
+                            o.getScore(e.getName()).score.toDouble()
+                        )
+                    ) return false
                 }
             }
         }
@@ -576,8 +597,11 @@ object CommandUtils {
     }
 
     private fun isName(arg: String?, e: Entity): Boolean {
-        return if (getName(arg) == null) true else isInverted(arg) == (e.customName == null) && isInverted(arg) != ((getName(arg)
-                == e.customName!!.replace(" ", "_")) || e is Player && e.getName().replace(" ", "_").equals(getName(arg), ignoreCase = true))
+        return if (getName(arg) == null) true else isInverted(arg) == (e.customName == null) && isInverted(arg) != ((getName(
+            arg
+        )
+                == e.customName!!.replace(" ", "_")) || e is Player && e.getName().replace(" ", "_")
+            .equals(getName(arg), ignoreCase = true))
     }
 
     private fun isType(arg: String?, e: Entity): Boolean {
@@ -587,7 +611,8 @@ object CommandUtils {
     }
 
     private fun isInverted(arg: String?): Boolean {
-        return arg!!.lowercase(Locale.getDefault()).split("!".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray().size != 1
+        return arg!!.lowercase(Locale.getDefault()).split("!".toRegex()).dropLastWhile { it.isEmpty() }
+            .toTypedArray().size != 1
     }
 
     private fun getInt(arg: String?): Int {
@@ -640,7 +665,8 @@ object CommandUtils {
         TEAM("team="),
         LMax("lm="),
         L(
-                "l="),
+            "l="
+        ),
         World("w="),
         m("m="),
         C("c="),
@@ -650,10 +676,12 @@ object CommandUtils {
         RYM("rym="),
         RX("rx="),
         SCORE_FULL(
-                "score="),
+            "score="
+        ),
         SCORE_MIN("score_min"),
         SCORE_13(
-                "scores="),
+            "scores="
+        ),
         R("r="),
         RXM("rxm="),
         RY("ry="),

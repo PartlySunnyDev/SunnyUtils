@@ -1,7 +1,5 @@
 package me.partlysunny.util.reflection
 
-import java.util.*
-
 /**
  * NOT BY ME!!! [https://gist.github.com/Lauriichan/294c64b63067dcb6a9a8658f2d040256](https://gist.github.com/Lauriichan/294c64b63067dcb6a9a8658f2d040256)
  */
@@ -16,7 +14,7 @@ class JavaTracker private constructor() {
 
         fun getClassFromStack(offset: Int): Class<*>? {
             val element = stack[3 + offset]
-                    ?: return null
+                ?: return null
             return JavaAccessor.getClass(element.className)
         }
 

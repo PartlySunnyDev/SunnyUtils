@@ -41,24 +41,41 @@ class EnchantModifierSelectGui : SelectGui<ItemStack>() {
             val border = StaticPane(0, 0, 9, 5)
             val items = StaticPane(1, 1, 7, 3)
             IFUtil.addPageNav(pane, numPages, i, border, gui)
-            border.addItem(GuiItem(ItemBuilder.Companion.builder(Material.GREEN_CONCRETE).setName(ChatColor.GREEN.toString() + "Add new").build()) { item: InventoryClickEvent? ->
-                val enchantCreation = SelectGuiManager.getSelectGui("enchantCreation") as SelectGui<EnchantContainer?>
-                enchantCreation.setReturnTo(p.getUniqueId(), "enchantModifierSelect")
-                GuiManager.openInventory(p, "enchantCreationSelect")
-            }, 1, 0)
-            border.addItem(GuiItem(ItemBuilder.Companion.builder(Material.YELLOW_CONCRETE).setName(ChatColor.GOLD.toString() + "Reload").build()) { item: InventoryClickEvent? -> GuiManager.openInventory(p, "enchantModifierSelect") }, 2, 0)
-            border.addItem(GuiItem(ItemBuilder.Companion.builder(Material.BLUE_CONCRETE).setName(ChatColor.BLUE.toString() + "Update").build()) { item: InventoryClickEvent? ->
-                p.sendMessage(ChatColor.GREEN.toString() + "Updated!")
-                p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f)
-                GuiManager.openInventory(p, getReturnTo(p))
-            }, 8, 2)
-            items.fillWith(ItemBuilder.Companion.builder(Material.GRAY_STAINED_GLASS_PANE).setName("").build())
+            border.addItem(
+                GuiItem(
+                    ItemBuilder.builder(Material.GREEN_CONCRETE)
+                        .setName(ChatColor.GREEN.toString() + "Add new").build()
+                ) {
+                    val enchantCreation =
+                        SelectGuiManager.getSelectGui("enchantCreation") as SelectGui<EnchantContainer?>
+                    enchantCreation.setReturnTo(p.getUniqueId(), "enchantModifierSelect")
+                    GuiManager.openInventory(p, "enchantCreationSelect")
+                }, 1, 0
+            )
+            border.addItem(
+                GuiItem(
+                    ItemBuilder.builder(Material.YELLOW_CONCRETE)
+                        .setName(ChatColor.GOLD.toString() + "Reload").build()
+                ) { item: InventoryClickEvent? -> GuiManager.openInventory(p, "enchantModifierSelect") }, 2, 0
+            )
+            border.addItem(
+                GuiItem(
+                    ItemBuilder.builder(Material.BLUE_CONCRETE).setName(ChatColor.BLUE.toString() + "Update")
+                        .build()
+                ) { item: InventoryClickEvent? ->
+                    p.sendMessage(ChatColor.GREEN.toString() + "Updated!")
+                    p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f)
+                    GuiManager.openInventory(p, getReturnTo(p))
+                }, 8, 2
+            )
+            items.fillWith(ItemBuilder.builder(Material.GRAY_STAINED_GLASS_PANE).setName("").build())
             for (j in count until count + displaySize) {
                 if (j > a.size - 1) {
                     break
                 }
                 val container = a[j]
-                val enchantAsItem: ItemStack = ItemBuilder.Companion.builder(Material.ENCHANTED_BOOK).addEnchantment(container.enchant(), container.lvl()).build()
+                val enchantAsItem: ItemStack = ItemBuilder.builder(Material.ENCHANTED_BOOK)
+                    .addEnchantment(container.enchant(), container.lvl()).build()
                 Util.addLoreLine(enchantAsItem, ChatColor.RED.toString() + "Right click to delete!")
                 Util.addLoreLine(enchantAsItem, ChatColor.GREEN.toString() + "Left click to edit!")
                 items.addItem(GuiItem(enchantAsItem) { item: InventoryClickEvent ->
@@ -67,17 +84,22 @@ class EnchantModifierSelectGui : SelectGui<ItemStack>() {
                         GuiManager.openInventory(p, "enchantModifierSelect")
                     }
                     if (item.isLeftClick) {
-                        val enchantCreation = SelectGuiManager.getSelectGui("enchantCreation") as SelectGui<EnchantContainer?>
+                        val enchantCreation =
+                            SelectGuiManager.getSelectGui("enchantCreation") as SelectGui<EnchantContainer?>
                         enchantCreation.setReturnTo(p.getUniqueId(), "enchantModifierSelect")
                         enchantCreation.openWithValue(p, container, "enchantCreationSelect")
                     }
                 }, (j - count) % 7, (j - count) / 7)
             }
             count += displaySize
-            border.addItem(GuiItem(ItemBuilder.Companion.builder(Material.ARROW).setName(ChatColor.GREEN.toString() + "Back").build()) { item: InventoryClickEvent? ->
-                resetValue(p.getUniqueId())
-                GuiManager.openInventory(p, getReturnTo(p))
-            }, 0, 4)
+            border.addItem(
+                GuiItem(
+                    ItemBuilder.builder(Material.ARROW).setName(ChatColor.GREEN.toString() + "Back").build()
+                ) { item: InventoryClickEvent? ->
+                    resetValue(p.getUniqueId())
+                    GuiManager.openInventory(p, getReturnTo(p))
+                }, 0, 4
+            )
             pane.addPane(i, border)
             pane.addPane(i, items)
         }

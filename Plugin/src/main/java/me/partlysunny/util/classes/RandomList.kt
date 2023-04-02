@@ -6,7 +6,8 @@ import java.util.stream.Collectors
 
 class RandomCollectionObject<T>(val `object`: T, val weight: Double)
 
-class RandomList<E> @JvmOverloads constructor(private val random: Random = Random()) : ArrayList<RandomCollectionObject<E>>() {
+class RandomList<E> @JvmOverloads constructor(private val random: Random = Random()) :
+    ArrayList<RandomCollectionObject<E>>() {
 
     constructor(c: Collection<RandomCollectionObject<E>>?) : this() {
         addAll(c!!)
@@ -17,7 +18,8 @@ class RandomList<E> @JvmOverloads constructor(private val random: Random = Rando
     }
 
     fun remove(o: Any): Boolean {
-        return (clone() as RandomList<*>).stream().anyMatch { t: RandomCollectionObject<out Any?>? -> (t?.`object` == o) && remove(t) }
+        return (clone() as RandomList<*>).stream()
+            .anyMatch { t: RandomCollectionObject<out Any?>? -> (t?.`object` == o) && remove(t) }
     }
 
     fun totalWeight(): Double {
@@ -30,8 +32,8 @@ class RandomList<E> @JvmOverloads constructor(private val random: Random = Rando
 
     fun raffle(predicate: Predicate<RandomCollectionObject<E>?>?): E {
         val aux = stream()
-                .filter(predicate)
-                .collect(Collectors.toCollection<RandomCollectionObject<E>, RandomList<E>>({ RandomList() }))
+            .filter(predicate)
+            .collect(Collectors.toCollection<RandomCollectionObject<E>, RandomList<E>>({ RandomList() }))
         return raffle(aux)
     }
 
@@ -42,7 +44,8 @@ class RandomList<E> @JvmOverloads constructor(private val random: Random = Rando
             auxWeight += rco.weight
             auxMap[auxWeight] = rco
         }
-        val totalWeight = list.random.nextDouble() * auxMap.values.stream().mapToDouble { obj: RandomCollectionObject<E> -> obj.weight }.sum()
+        val totalWeight = list.random.nextDouble() * auxMap.values.stream()
+            .mapToDouble { obj: RandomCollectionObject<E> -> obj.weight }.sum()
         return auxMap.ceilingEntry(totalWeight).value.`object`
     }
 

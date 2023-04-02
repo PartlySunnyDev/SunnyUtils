@@ -180,7 +180,12 @@ object Util {
     }
 
     @JvmOverloads
-    fun splitLoreForLine(input: String, linePrefix: String = ChatColor.GRAY.toString(), lineSuffix: String = "", width: Int = 30): List<String> {
+    fun splitLoreForLine(
+        input: String,
+        linePrefix: String = ChatColor.GRAY.toString(),
+        lineSuffix: String = "",
+        width: Int = 30
+    ): List<String> {
         val array = input.toCharArray()
         val out: MutableList<String> = ArrayList()
         var currentColor = ""
@@ -213,7 +218,11 @@ object Util {
                 continue
             }
             if (c == ' ') {
-                if ((currentLine.toString() + currentWord.toString()).replace("ยง[0-9a-fklmnor]".toRegex(), "").length > width) {
+                if ((currentLine.toString() + currentWord.toString()).replace(
+                        "ยง[0-9a-fklmnor]".toRegex(),
+                        ""
+                    ).length > width
+                ) {
                     out.add(currentLine.toString() + lineSuffix)
                     currentLine = StringBuilder("$linePrefix$cachedColor$currentWord ")
                 } else {

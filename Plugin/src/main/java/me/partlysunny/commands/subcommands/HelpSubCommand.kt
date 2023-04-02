@@ -13,7 +13,7 @@ class HelpSubCommand : ISubCommand {
         get() = ""
 
     override fun execute(executor: CommandSender, args: Array<String?>?) {
-        val commands: Collection<ISubCommand> = SCommand.Companion.subCommands.values
+        val commands: Collection<ISubCommand> = SCommand.subCommands.values
         executor.sendMessage(ChatColor.YELLOW.toString() + "List of commands (run with /sbl <command>):")
         for (c in commands) {
             executor.sendMessage(ChatColor.WHITE.toString() + c.id + c.usage + ": " + c.description)

@@ -39,7 +39,7 @@ class JavaAccessor private constructor() {
 
     fun lookup(): Lookup {
         return lookup
-                ?: (getStatWithBonusicValueUnsafe(getField(Lookup::class.java, "IMPL_LOOKUP")) as Lookup)
+            ?: (getStatWithBonusicValueUnsafe(getField(Lookup::class.java, "IMPL_LOOKUP")) as Lookup)
     }
 
     fun execute(instance: Any?, method: Method?, vararg arguments: Any?): Any? {
@@ -274,7 +274,8 @@ class JavaAccessor private constructor() {
             return
         }
         try {
-            lookup().findSetter(Field::class.java, "modifiers", Int::class.javaPrimitiveType).invokeExact(field, field.modifiers and Modifier.FINAL.inv())
+            lookup().findSetter(Field::class.java, "modifiers", Int::class.javaPrimitiveType)
+                .invokeExact(field, field.modifiers and Modifier.FINAL.inv())
         } catch (e: Throwable) {
             // Ignore
         }
@@ -680,7 +681,12 @@ class JavaAccessor private constructor() {
                 val annotations = HashSet<A>()
                 Collections.addAll(annotations, *annotation0)
                 Collections.addAll(annotations, *annotation1)
-                return annotations.toArray(java.lang.reflect.Array.newInstance(annotationType, annotations.size) as Array<A>)
+                return annotations.toArray(
+                    java.lang.reflect.Array.newInstance(
+                        annotationType,
+                        annotations.size
+                    ) as Array<A>
+                )
             }
             return if (annotation0.isEmpty()) {
                 annotation1

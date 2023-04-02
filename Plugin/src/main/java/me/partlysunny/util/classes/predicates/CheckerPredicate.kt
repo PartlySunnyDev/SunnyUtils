@@ -23,14 +23,23 @@ class CheckerPredicate(private val predicate: String) {
         //Check brackets
         Preconditions.checkArgument(isBracketReady, "Predicate %s is not bracket ready!".formatted(predicate))
         //Check chunks
-        Preconditions.checkArgument(chunks.size % 2 == 1, "Invalid predicate %s, chunks must have odd length: Chunks are: %s".formatted(predicate, chunks))
+        Preconditions.checkArgument(
+            chunks.size % 2 == 1,
+            "Invalid predicate %s, chunks must have odd length: Chunks are: %s".formatted(predicate, chunks)
+        )
         for (i in chunks.indices) {
             val chunk = chunks[i]
             if (i % 2 == 1) {
                 try {
                     Relationship.valueOf(chunk)
                 } catch (e: Exception) {
-                    throw IllegalArgumentException("All predicate joiners must be %s, Found: %s".formatted(Arrays.toString(Relationship.values()), chunk))
+                    throw IllegalArgumentException(
+                        "All predicate joiners must be %s, Found: %s".formatted(
+                            Arrays.toString(
+                                Relationship.values()
+                            ), chunk
+                        )
+                    )
                 }
             }
         }
@@ -143,7 +152,11 @@ class CheckerPredicate(private val predicate: String) {
                         return try {
                             term1!!.toDouble() > term2!!.toDouble()
                         } catch (ignored: NumberFormatException) {
-                            throw IllegalArgumentException("Left and right terms must both be parsable doubles in expression %s".formatted(expression))
+                            throw IllegalArgumentException(
+                                "Left and right terms must both be parsable doubles in expression %s".formatted(
+                                    expression
+                                )
+                            )
                         }
                     }
 
@@ -151,7 +164,11 @@ class CheckerPredicate(private val predicate: String) {
                         return try {
                             term1!!.toDouble() < term2!!.toDouble()
                         } catch (ignored: NumberFormatException) {
-                            throw IllegalArgumentException("Left and right terms must both be parsable doubles in expression %s".formatted(expression))
+                            throw IllegalArgumentException(
+                                "Left and right terms must both be parsable doubles in expression %s".formatted(
+                                    expression
+                                )
+                            )
                         }
                     }
 
@@ -159,7 +176,11 @@ class CheckerPredicate(private val predicate: String) {
                         return try {
                             term1!!.toDouble() >= term2!!.toDouble()
                         } catch (ignored: NumberFormatException) {
-                            throw IllegalArgumentException("Left and right terms must both be parsable doubles in expression %s".formatted(expression))
+                            throw IllegalArgumentException(
+                                "Left and right terms must both be parsable doubles in expression %s".formatted(
+                                    expression
+                                )
+                            )
                         }
                     }
 
@@ -167,7 +188,11 @@ class CheckerPredicate(private val predicate: String) {
                         return try {
                             term1!!.toDouble() <= term2!!.toDouble()
                         } catch (ignored: NumberFormatException) {
-                            throw IllegalArgumentException("Left and right terms must both be parsable doubles in expression %s".formatted(expression))
+                            throw IllegalArgumentException(
+                                "Left and right terms must both be parsable doubles in expression %s".formatted(
+                                    expression
+                                )
+                            )
                         }
                     }
                 }
@@ -179,24 +204,28 @@ class CheckerPredicate(private val predicate: String) {
             val item = chunks[i]
             //If the variable "i" is even then it is an operator, otherwise it's an expression
             if (i % 2 == 1) {
-                val operationProcessor = BiFunction<CheckerPredicate, CheckerPredicate, PredicateRelationship> { a: CheckerPredicate?, b: CheckerPredicate? ->
-                    for (r in Relationship.values()) {
-                        if (item == r.toString()) {
-                            try {
-                                return@BiFunction r.clazz().getDeclaredConstructor(CheckerPredicate::class.java, CheckerPredicate::class.java).newInstance(a, b)
-                            } catch (e: InstantiationException) {
-                                throw RuntimeException(e)
-                            } catch (e: IllegalAccessException) {
-                                throw RuntimeException(e)
-                            } catch (e: InvocationTargetException) {
-                                throw RuntimeException(e)
-                            } catch (e: NoSuchMethodException) {
-                                throw RuntimeException(e)
+                val operationProcessor =
+                    BiFunction<CheckerPredicate, CheckerPredicate, PredicateRelationship> { a: CheckerPredicate?, b: CheckerPredicate? ->
+                        for (r in Relationship.values()) {
+                            if (item == r.toString()) {
+                                try {
+                                    return@BiFunction r.clazz().getDeclaredConstructor(
+                                        CheckerPredicate::class.java,
+                                        CheckerPredicate::class.java
+                                    ).newInstance(a, b)
+                                } catch (e: InstantiationException) {
+                                    throw RuntimeException(e)
+                                } catch (e: IllegalAccessException) {
+                                    throw RuntimeException(e)
+                                } catch (e: InvocationTargetException) {
+                                    throw RuntimeException(e)
+                                } catch (e: NoSuchMethodException) {
+                                    throw RuntimeException(e)
+                                }
                             }
                         }
+                        throw IllegalStateException("Somehow the program really broke down somewhere, better contact devs")
                     }
-                    throw IllegalStateException("Somehow the program really broke down somewhere, better contact devs")
-                }
                 endRelationship = if (endRelationship == null) {
                     operationProcessor.apply(CheckerPredicate(chunks[i - 1]), CheckerPredicate(chunks[i + 1]))
                 } else {
@@ -211,21 +240,55 @@ class CheckerPredicate(private val predicate: String) {
     class PredicateTest {
         @Test
         fun chunkTest() {
-            Assert.assertEquals(listOf("(a AND b) OR c", "AND", "d", "OR", "e"), CheckerPredicate("((a AND b) OR c) AND d OR e").chunk())
-            Assert.assertEquals(listOf("a AND b", "OR", "e", "AND", "?weather is SUNNY", "OR", "d AND c"), CheckerPredicate("(a AND b) OR e AND ?weather is SUNNY OR (d AND c)").chunk())
-            Assert.assertEquals(listOf("a AND b", "OR", "e", "AND", "?weather is STORMY", "AND", "d AND c"), CheckerPredicate("(a AND b) OR e AND ?weather is STORMY AND (d AND c)").chunk())
+            Assert.assertEquals(
+                listOf("(a AND b) OR c", "AND", "d", "OR", "e"),
+                CheckerPredicate("((a AND b) OR c) AND d OR e").chunk()
+            )
+            Assert.assertEquals(
+                listOf("a AND b", "OR", "e", "AND", "?weather is SUNNY", "OR", "d AND c"),
+                CheckerPredicate("(a AND b) OR e AND ?weather is SUNNY OR (d AND c)").chunk()
+            )
+            Assert.assertEquals(
+                listOf("a AND b", "OR", "e", "AND", "?weather is STORMY", "AND", "d AND c"),
+                CheckerPredicate("(a AND b) OR e AND ?weather is STORMY AND (d AND c)").chunk()
+            )
         }
 
         @Test
         fun relationshipTest() {
-            Assert.assertTrue(CheckerPredicate("(true XOR false) OR ((true AND false) XNOR (false OR false))").process(PredicateContext()))
+            Assert.assertTrue(
+                CheckerPredicate("(true XOR false) OR ((true AND false) XNOR (false OR false))").process(
+                    PredicateContext()
+                )
+            )
         }
 
         @Test
         fun expressionTest() {
-            Assert.assertTrue(CheckerPredicate("?weather = SUNNY").process(PredicateContext(HashMapBuilder<String?, String?>().put("weather", "SUNNY").build())))
-            Assert.assertTrue(CheckerPredicate("(?weather = SUNNY AND ?time > 400) OR (?weather = STORMY)").process(PredicateContext(HashMapBuilder<String?, String?>().put("weather", "STORMY").put("time", "300").build())))
-            Assert.assertFalse(CheckerPredicate("(?weather = SUNNY AND ?time > 400) OR (?weather = STORMY)").process(PredicateContext(HashMapBuilder<String?, String?>().put("weather", "SUNNY").put("time", "200").build())))
+            Assert.assertTrue(
+                CheckerPredicate("?weather = SUNNY").process(
+                    PredicateContext(
+                        HashMapBuilder<String?, String?>().put(
+                            "weather",
+                            "SUNNY"
+                        ).build()
+                    )
+                )
+            )
+            Assert.assertTrue(
+                CheckerPredicate("(?weather = SUNNY AND ?time > 400) OR (?weather = STORMY)").process(
+                    PredicateContext(
+                        HashMapBuilder<String?, String?>().put("weather", "STORMY").put("time", "300").build()
+                    )
+                )
+            )
+            Assert.assertFalse(
+                CheckerPredicate("(?weather = SUNNY AND ?time > 400) OR (?weather = STORMY)").process(
+                    PredicateContext(
+                        HashMapBuilder<String?, String?>().put("weather", "SUNNY").put("time", "200").build()
+                    )
+                )
+            )
         }
     }
 
