@@ -1,8 +1,7 @@
 package me.partlysunny
 
-import me.partlysunny.commands.SCommand
-import me.partlysunny.commands.STabCompleter
-import me.partlysunny.commands.subcommands.HelpSubCommand
+import me.partlysunny.command.CommandManager
+import me.partlysunny.command.commands.TestCommand
 import me.partlysunny.gui.SelectGuiManager
 import me.partlysunny.gui.textInput.ChatListener
 import me.partlysunny.util.Util
@@ -16,6 +15,7 @@ import java.util.zip.ZipInputStream
 class SunnySpigotCore : JavaPlugin() {
 
     private var versionManager: VersionManager? = null
+    private var commandManager: CommandManager? = null
 
     private fun reload() {
 
@@ -46,8 +46,8 @@ class SunnySpigotCore : JavaPlugin() {
         } catch (e: IOException) {
             throw RuntimeException(e)
         }
-        //Register subcommands
-        //Register subcommands
+        //Register command
+        //Register command
         registerCommands()
         registerListeners()
         reload()
@@ -65,15 +65,8 @@ class SunnySpigotCore : JavaPlugin() {
     }
 
     private fun registerCommands() {
-        //Register all sub commands here
-        SCommand.registerSubCommand(HelpSubCommand())
-        val mainCommand = getCommand(SCommand.command)
-        if (mainCommand == null) {
-            ConsoleLogger.error("Main command doesn't exist! Check plugin.yml for more info")
-            return
-        }
-        mainCommand.setExecutor(SCommand())
-        mainCommand.tabCompleter = STabCompleter()
+        commandManager = CommandManager(this)
+        commandManager!!.register(TestCommand())
     }
 
     @Throws(IOException::class)

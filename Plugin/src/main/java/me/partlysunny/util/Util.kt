@@ -361,6 +361,15 @@ object Util {
         }
     }
 
+    fun hasAllPerms(p: Player, vararg perms: String): Boolean {
+        for (perm in perms) {
+            if (!p.hasPermission(perm)) {
+                return false
+            }
+        }
+        return true
+    }
+
     /**
      * Generation head type enum
      */

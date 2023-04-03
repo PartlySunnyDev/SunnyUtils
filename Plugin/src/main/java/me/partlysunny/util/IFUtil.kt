@@ -93,9 +93,10 @@ object IFUtil {
         pane.fillWith(ItemBuilder.builder(Material.GRAY_STAINED_GLASS_PANE).build())
         setClickSoundTo(Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_OFF, ui)
         for ((count, d) in linspace.withIndex()) {
-            pane.addItem(GuiItem(
-                items[count].b()!!
-            ) { GuiManager.openInventory(p, items[count].a()) }, d.roundToInt(), 1
+            pane.addItem(
+                GuiItem(
+                    items[count].b()!!
+                ) { GuiManager.openInventory(p, items[count].a()) }, d.roundToInt(), 1
             )
         }
         ui.addPane(pane)

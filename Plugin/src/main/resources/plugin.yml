@@ -2,12 +2,7 @@ name: SunnySpigotBaseCore
 version: '${project.version}'
 main: me.partlysunny.SunnySpigotCore
 api-version: 1.16
-commands:
-  slb:
-    aliases: [ sunnyspigotbase, sunny ]
-    description: SunnySpigotBase base command for ops
-
 permissions:
-  slb.admin:
+  sunny.admin:
     default: op
-    description: Admin commands (from /sunny)
+    description: Admin permission
