@@ -11,6 +11,12 @@
 
     <name>SunnyUtils</name>
 
+    <scm>
+        <connection>scm:git:https://github.com/steveyxz/SunnyUtils.git</connection>
+        <developerConnection>scm:git:https://github.com/steveyxz/SunnyUtils.git</developerConnection>
+        <url>https://github.com/steveyxz/SunnyUtils.git</url>
+    </scm>
+
     <description>Spigot utilities library for 1.16.5+</description>
     <properties>
         <maven.compiler.source>16</maven.compiler.source>
