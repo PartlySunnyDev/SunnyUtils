@@ -17,8 +17,8 @@
 
     <parent>
         <groupId>me.partlysunny</groupId>
-        <artifactId>SunnySpigotBase</artifactId>
-        <version>1.0</version>
+        <artifactId>SunnyUtils</artifactId>
+        <version>0.1</version>
     </parent>
 
     <repositories>

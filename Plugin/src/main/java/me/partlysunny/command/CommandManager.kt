@@ -1,10 +1,7 @@
 package me.partlysunny.command
 
 import me.partlysunny.ConsoleLogger
-import me.partlysunny.command.annotations.ArgLengthBounds
-import me.partlysunny.command.annotations.Autocomplete
-import me.partlysunny.command.annotations.Permission
-import me.partlysunny.command.annotations.Subcommand
+import me.partlysunny.command.annotations.*
 import me.partlysunny.util.reflection.JavaAccessor
 import org.bukkit.ChatColor
 import org.bukkit.command.*
@@ -61,6 +58,15 @@ class CommandManager(plugin: Plugin) : CommandExecutor, TabCompleter {
         mutableMapOf()
     private val commandCompletions: MutableMap<Command, Pair<Method, Any>> = mutableMapOf()
 
+    // These are the command cooldown times
+    private val commandCooldowns: MutableMap<Command, Pair<Long, String>> = mutableMapOf()
+    private val subcommandCooldowns: MutableMap<Command, MutableMap<String, Pair<Long, String>>> = mutableMapOf()
+
+    // These are the command cooldown times currently in use
+    private val commandCurrentCooldowns: MutableMap<UUID, MutableMap<Command, Long>> = mutableMapOf()
+    private val subcommandCurrentCooldowns: MutableMap<UUID, MutableMap<Command, MutableMap<String, Long>>> =
+        mutableMapOf()
+
     fun register(objInst: Any) {
         // Loop through all methods in the class
         JavaAccessor.getMethods(objInst.javaClass).forEach { method ->
@@ -99,6 +105,12 @@ class CommandManager(plugin: Plugin) : CommandExecutor, TabCompleter {
                     commandPermissions[pluginCommand] = Arrays.stream(permission)
                         .map { Pair(it.permission, it.errorMessage) }
                         .toList() as MutableList<Pair<String, String>>
+                }
+                // Check if the method has the @Cooldown annotation
+                // If it does, add it to the commandCooldowns map
+                if (method.isAnnotationPresent(Cooldown::class.java)) {
+                    val cooldown = method.getAnnotation(Cooldown::class.java)
+                    commandCooldowns[pluginCommand] = Pair(cooldown.length, cooldown.message)
                 }
             }
             // Check if the method has the @Subcommand annotation
@@ -171,6 +183,26 @@ class CommandManager(plugin: Plugin) : CommandExecutor, TabCompleter {
                             subcommandAutocomplete[parentCommand] = mutableListOf(subcommand.commandName)
                         }
                     }
+                    // Check if the method has the @Cooldown annotation
+                    // If it does, add it to the subcommandCooldowns map
+                    if (method.isAnnotationPresent(Cooldown::class.java)) {
+                        val cooldown = method.getAnnotation(Cooldown::class.java)
+                        if (subcommandCooldowns.containsKey(parentCommand)) {
+                            subcommandCooldowns[parentCommand]!![subcommand.commandName] =
+                                Pair(cooldown.length, cooldown.message)
+                        } else {
+                            subcommandCooldowns[parentCommand] =
+                                mutableMapOf(subcommand.commandName to Pair(cooldown.length, cooldown.message))
+                        }
+                    } else if (!method.isAnnotationPresent(InheritCooldown::class.java)) {
+                        if (subcommandCooldowns.containsKey(parentCommand)) {
+                            subcommandCooldowns[parentCommand]!![subcommand.commandName] =
+                                Pair(0, "")
+                        } else {
+                            subcommandCooldowns[parentCommand] =
+                                mutableMapOf(subcommand.commandName to Pair(0, ""))
+                        }
+                    }
                 } else {
                     ConsoleLogger.error("Issue registering subcommand ${subcommand.commandName}! Parent command ${subcommand.parent} does not exist!")
                     ConsoleLogger.error("Possible fix: Make sure the parent command is registered before the subcommand!")
@@ -194,12 +226,67 @@ class CommandManager(plugin: Plugin) : CommandExecutor, TabCompleter {
     }
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
+        ConsoleLogger.console("Command cooldowns: $commandCurrentCooldowns")
+        ConsoleLogger.console("Subcommand cooldowns: $subcommandCurrentCooldowns")
         // If the command has subcommands then check if the first argument is a subcommand
         if (subcommands.containsKey(command)) {
             if (args.isNotEmpty()) {
                 // This means a subcommand was used, find the subcommand and execute it
                 if (subcommands[command]!!.containsKey(args[0])) {
                     val subcommand = subcommands[command]!![args[0]]!!
+                    //
+                    // ----------- COOLDOWN LOGIC ------------
+                    //
+                    // Denotes whether this subcommand has its own cooldown or not
+                    // If it doesn't, it will inherit the cooldown from the parent command
+                    var doesHaveSubcommandCooldown = subcommandCooldowns.containsKey(command)
+                    if (doesHaveSubcommandCooldown) {
+                        val cooldown = subcommandCooldowns[command]!![args[0]]
+                        // Check if the sender is a player
+                        if (sender is Player) {
+                            if (cooldown != null) {
+                                //Get the player cooldowns
+                                if (!subcommandCurrentCooldowns.containsKey(sender.uniqueId)) {
+                                    subcommandCurrentCooldowns[sender.uniqueId] = mutableMapOf(command to mutableMapOf())
+                                }
+                                val playerCooldowns = subcommandCurrentCooldowns[sender.uniqueId]!![command]!!
+                                // Check if the player has a cooldown
+                                if (playerCooldowns.containsKey(subcommand.first.name)) {
+                                    // Check if the cooldown has expired
+                                    if (playerCooldowns[subcommand.first.name]!! > System.currentTimeMillis()) {
+                                        sender.sendMessage("${ChatColor.RED}${cooldown.second}")
+                                        return true
+                                    }
+                                }
+                                // If the player doesn't have a cooldown, add one
+                                playerCooldowns[subcommand.first.name] = System.currentTimeMillis() + cooldown!!.first
+                            } else {
+                                doesHaveSubcommandCooldown = false
+                            }
+                        }
+                    }
+                    // If not then inherit the parent's cooldown
+                    if (!doesHaveSubcommandCooldown && commandCooldowns.containsKey(command) && sender is Player) {
+                        val parentCooldown = commandCooldowns[command]!!
+                        // Check if the sender is a player
+                        // Get the player cooldowns
+                        if (!commandCurrentCooldowns.containsKey(sender.uniqueId)) {
+                            commandCurrentCooldowns[sender.uniqueId] = mutableMapOf(command to 0)
+                        }
+                        val playerCooldowns = commandCurrentCooldowns[sender.uniqueId]!!
+                        // Check if the player has a cooldown
+                        if (playerCooldowns.containsKey(command)) {
+                            // Check if the cooldown has expired
+                            if (playerCooldowns[command]!! > System.currentTimeMillis()) {
+                                // If not, send the player a message and return
+                                sender.sendMessage("${ChatColor.RED}${parentCooldown.second}")
+                                return true
+                            }
+                        }
+                        // If the player doesn't have a cooldown, add one
+                        playerCooldowns[command] = System.currentTimeMillis() + parentCooldown.first
+                    }
+
                     // Check for arg bounds if the wrong amount of arguments was provided
                     if (subcommandArgBounds.containsKey(command)) {
                         if (subcommandArgBounds[command]!!.containsKey(args[0])) {
@@ -229,6 +316,29 @@ class CommandManager(plugin: Plugin) : CommandExecutor, TabCompleter {
             else {
                 val commandArgs = CommandArgs(sender, command, label, args)
                 val commandInfo = commands[command]!!
+                // Check for cooldowns
+                if (commandCooldowns.containsKey(command)) {
+                    val cooldown = commandCooldowns[command]!!
+                    // Check if the sender is a player
+                    if (sender is Player) {
+                        //Get the player cooldowns
+                        if (!commandCurrentCooldowns.containsKey(sender.uniqueId)) {
+                            commandCurrentCooldowns[sender.uniqueId] = mutableMapOf(command to 0)
+                        }
+                        val playerCooldowns = commandCurrentCooldowns[sender.uniqueId]!!
+                        // Check if the player has a cooldown
+                        if (playerCooldowns.containsKey(command)) {
+                            // Check if the cooldown has expired
+                            if (playerCooldowns[command]!! > System.currentTimeMillis()) {
+                                // If not, send the player a message and return
+                                sender.sendMessage("${ChatColor.RED}${cooldown.second}")
+                                return true
+                            }
+                        }
+                        // If the player doesn't have a cooldown, add one
+                        playerCooldowns[command] = System.currentTimeMillis() + cooldown.first
+                    }
+                }
                 // Check for arg bounds if the wrong amount of arguments was provided
                 if (commandArgBounds.containsKey(command)) {
                     val bounds = commandArgBounds[command]!!
@@ -252,6 +362,26 @@ class CommandManager(plugin: Plugin) : CommandExecutor, TabCompleter {
                 // Create arguments and check for arg bounds if the wrong amount of arguments was provided
                 val commandArgs = CommandArgs(sender, command, label, args)
                 val commandInfo = commands[command]!!
+                // Check for cooldowns
+                if (commandCooldowns.containsKey(command)) {
+                    val cooldown = commandCooldowns[command]!!
+                    // Check if the sender is a player
+                    if (sender is Player) {
+                        //Get the player cooldowns
+                        val playerCooldowns = commandCurrentCooldowns[sender.uniqueId]!!
+                        // Check if the player has a cooldown
+                        if (playerCooldowns.containsKey(command)) {
+                            // Check if the cooldown has expired
+                            if (playerCooldowns[command]!! > System.currentTimeMillis()) {
+                                // If not, send the player a message and return
+                                sender.sendMessage("${ChatColor.RED}${cooldown.second}")
+                                return true
+                            }
+                        }
+                        // If the player doesn't have a cooldown, add one
+                        playerCooldowns[command] = System.currentTimeMillis() + cooldown.first
+                    }
+                }
                 if (commandArgBounds.containsKey(command)) {
                     val bounds = commandArgBounds[command]!!
                     if (args.size < bounds.first || args.size > bounds.second) {

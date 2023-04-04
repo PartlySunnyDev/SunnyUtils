@@ -5,17 +5,18 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>me.partlysunny</groupId>
-    <artifactId>SunnySpigotBase</artifactId>
-    <version>1.0</version>
+    <artifactId>SunnyUtils</artifactId>
+    <version>0.1</version>
     <packaging>pom</packaging>
 
-    <name>SunnySpigotBase</name>
+    <name>SunnyUtils</name>
 
-    <description>Base plugin for 1.16+</description>
+    <description>Spigot utilities library for 1.16.5+</description>
     <properties>
         <maven.compiler.source>16</maven.compiler.source>
         <maven.compiler.target>16</maven.compiler.target>
         <kotlin.version>1.8.20</kotlin.version>
+        <plugin.name>SunnyUtils</plugin.name>
     </properties>
 
     <dependencies>

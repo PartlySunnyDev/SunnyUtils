@@ -47,7 +47,6 @@ class SunnySpigotCore : JavaPlugin() {
             throw RuntimeException(e)
         }
         //Register command
-        //Register command
         registerCommands()
         registerListeners()
         reload()

@@ -9,7 +9,7 @@ annotation class Cooldown(
     /**
      * Length of cooldown in milliseconds
      */
-    val length: Int,
+    val length: Long,
     /**
      * Message to display if cooldown is not over
      */

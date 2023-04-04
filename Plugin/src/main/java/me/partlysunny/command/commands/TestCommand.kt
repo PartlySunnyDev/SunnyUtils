@@ -17,7 +17,6 @@ class TestCommand {
     }
 
     @Subcommand("test", "spook", ["speek", "spuuk", "spaak"], "Spooook the test", "test spook <player>")
-    @Cooldown(1500, "Cannot spook that fast")
     @Autocomplete
     @ArgLengthBounds(1, 1, "${ChatColor.COLOR_CHAR}4You must specify a player to spook!")
     @Permission("sunny.test.spook", "${ChatColor.COLOR_CHAR}cYou do not have permission to spook the test!")
