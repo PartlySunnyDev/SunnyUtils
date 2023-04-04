@@ -39,7 +39,7 @@ class TestCommand {
     }
 
     @Completion("test.spook")
-    fun testSpookCompletion(sender: CommandSender, argIndex: Int): List<String> {
+    fun testSpookCompletion(sender: CommandSender, argIndex: Int): MutableList<String> {
         val completions = mutableListOf<String>()
         if (sender is Player) {
             sender.world.players.forEach { player ->

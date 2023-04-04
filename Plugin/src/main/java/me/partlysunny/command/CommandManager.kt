@@ -2,6 +2,7 @@ package me.partlysunny.command
 
 import me.partlysunny.ConsoleLogger
 import me.partlysunny.command.annotations.ArgLengthBounds
+import me.partlysunny.command.annotations.Autocomplete
 import me.partlysunny.command.annotations.Permission
 import me.partlysunny.command.annotations.Subcommand
 import me.partlysunny.util.reflection.JavaAccessor
@@ -13,8 +14,10 @@ import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.SimplePluginManager
 import java.lang.reflect.Method
 import java.util.*
+import java.util.stream.Collectors
 import me.partlysunny.command.annotations.Command as CustomCommand
 
+@SuppressWarnings("unchecked")
 class CommandManager(plugin: Plugin) : CommandExecutor, TabCompleter {
 
 
@@ -37,20 +40,25 @@ class CommandManager(plugin: Plugin) : CommandExecutor, TabCompleter {
     // Maps of commands to their respective methods and instances
     private val commands: MutableMap<Command, Pair<Method, Any>> = mutableMapOf()
     private val subcommands: MutableMap<Command, MutableMap<String, Triple<Command, Method, Any>>> = mutableMapOf()
+
     // Maps of commands and their argument bounds
     private val commandArgBounds: MutableMap<Command, Triple<Int, Int, String>> = mutableMapOf()
     private val subcommandArgBounds: MutableMap<Command, MutableMap<String, Triple<Int, Int, String>>> = mutableMapOf()
+
     // Maps of commands and their required permissions
     private val commandPermissions: MutableMap<Command, MutableList<Pair<String, String>>> = mutableMapOf()
     private val subcommandPermissions: MutableMap<Command, MutableMap<String, MutableList<Pair<String, String>>>> =
         mutableMapOf()
+
     // Subcommand autocompletions, not to be confused with subcommand command completions
     // Subcommand autocompletions are for the subcommand name, not the arguments
     // e.g. /test spook <player> -> spook is the subcommand name, and will be autocompleted
     // e.g. /test spook <player> -> <player> is the subcommand argument, and will be autocompleted by the command completion
     private val subcommandAutocomplete: MutableMap<Command, MutableList<String>> = mutableMapOf()
+
     // These are the command completions for the arguments of commands / subcommands
-    private val subcommandCommandCompletions: MutableMap<Command, MutableMap<String, Pair<Method, Any>>> = mutableMapOf()
+    private val subcommandCommandCompletions: MutableMap<Command, MutableMap<String, Pair<Method, Any>>> =
+        mutableMapOf()
     private val commandCompletions: MutableMap<Command, Pair<Method, Any>> = mutableMapOf()
 
     fun register(objInst: Any) {
@@ -154,6 +162,15 @@ class CommandManager(plugin: Plugin) : CommandExecutor, TabCompleter {
                                     .toList() as MutableList<Pair<String, String>>)
                         }
                     }
+                    // Check if the method has the @Autocomplete annotation
+                    // If it does, add it to the subcommandAutocomplete map
+                    if (method.isAnnotationPresent(Autocomplete::class.java)) {
+                        if (subcommandAutocomplete.containsKey(parentCommand)) {
+                            subcommandAutocomplete[parentCommand]!!.add(subcommand.commandName)
+                        } else {
+                            subcommandAutocomplete[parentCommand] = mutableListOf(subcommand.commandName)
+                        }
+                    }
                 } else {
                     ConsoleLogger.error("Issue registering subcommand ${subcommand.commandName}! Parent command ${subcommand.parent} does not exist!")
                     ConsoleLogger.error("Possible fix: Make sure the parent command is registered before the subcommand!")
@@ -221,7 +238,11 @@ class CommandManager(plugin: Plugin) : CommandExecutor, TabCompleter {
                     }
                 }
                 // Check permissions
-                if (!commandPermissions.containsKey(command) || permissionCheck(sender, commandPermissions[command]!!)) {
+                if (!commandPermissions.containsKey(command) || permissionCheck(
+                        sender,
+                        commandPermissions[command]!!
+                    )
+                ) {
                     JavaAccessor.invoke(commandInfo.second, commandInfo.first, commandArgs)
                 }
             }
@@ -239,7 +260,11 @@ class CommandManager(plugin: Plugin) : CommandExecutor, TabCompleter {
                     }
                 }
                 // Check permissions
-                if (!commandPermissions.containsKey(command) || permissionCheck(sender, commandPermissions[command]!!)) {
+                if (!commandPermissions.containsKey(command) || permissionCheck(
+                        sender,
+                        commandPermissions[command]!!
+                    )
+                ) {
                     JavaAccessor.invoke(commandInfo.second, commandInfo.first, commandArgs)
                 }
             }
@@ -253,7 +278,53 @@ class CommandManager(plugin: Plugin) : CommandExecutor, TabCompleter {
         label: String,
         args: Array<out String>
     ): MutableList<String>? {
-        return null
+        // Check if the command has subcommands
+        if (subcommands.containsKey(command)) {
+            // Check if you are trying to tab complete a subcommand
+            if (args.size == 1) {
+                // If you are, return a list of all subcommands
+                // Stream is used to filter out subcommands that the sender does not have permission for
+                return subcommandAutocomplete[command]!!.stream().filter { subcommand ->
+                    if (subcommandPermissions.containsKey(command)) {
+                        if (subcommandPermissions[command]!!.containsKey(subcommand)) {
+                            permissionCheck(sender, subcommandPermissions[command]!![subcommand]!!)
+                        } else {
+                            true
+                        }
+                    } else {
+                        true
+                    }
+                }.collect(Collectors.toList())
+            } else {
+                // If you are not, use the subcommand's tab completer
+                if (subcommandCommandCompletions.containsKey(command)) {
+                    if (subcommandCommandCompletions[command]!!.containsKey(args[0])) {
+                        // Get the tab completer and execute it
+                        // Filter out any results that do not start with the current input
+                        val completer = subcommandCommandCompletions[command]!![args[0]]!!
+                        return (completer.first.invoke(
+                            completer.second,
+                            sender,
+                            args.size - 1
+                        ) as MutableList<String>).stream().filter { t -> t.startsWith(args.last()) }
+                            .collect(Collectors.toList())
+                    }
+                }
+            }
+        } else {
+            // If the command does not have subcommands, check if it has a tab completer
+            if (commandCompletions.containsKey(command)) {
+                val completer = commandCompletions[command]!!
+                // Execute the tab completer and filter out any results that do not start with the current input
+                return (completer.first.invoke(
+                    completer.second,
+                    sender,
+                    args.size - 1
+                ) as MutableList<String>).stream().filter { t -> t.startsWith(args.last()) }
+                    .collect(Collectors.toList())
+            }
+        }
+        return mutableListOf()
     }
 
 }
