@@ -1,8 +1,0 @@
-name: SunnySpigotBaseCore
-version: '${project.version}'
-main: me.partlysunny.SunnySpigotCore
-api-version: 1.16
-permissions:
-  sunny.admin:
-    default: op
-    description: Admin permission

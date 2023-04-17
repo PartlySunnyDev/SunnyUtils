@@ -1,4 +1,5 @@
 ## Spigot API library for creating plugins!
+[![](https://jitpack.io/v/steveyxz/SunnyUtils.svg)](https://jitpack.io/#steveyxz/SunnyUtils)
 
 Currently supports **1.16.5+** (latetst versions)
 

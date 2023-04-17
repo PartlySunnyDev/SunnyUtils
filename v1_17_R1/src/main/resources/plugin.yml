@@ -1,4 +1,4 @@
 name: V1_17_R1
 version: '${project.version}'
-main: me.partlysunny.v1_17_R1.Module
+main: me.partlysunny.sunnyutils.v1_17_R1.Module
 api-version: 1.17

@@ -1,4 +1,4 @@
 name: V1_16_R3
 version: '${project.version}'
-main: me.partlysunny.NMSHandler
+main: me.partlysunny.sunnyutils.NMSHandler
 api-version: 1.16
