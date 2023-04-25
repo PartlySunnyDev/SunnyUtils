@@ -21,7 +21,7 @@
     <properties>
         <maven.compiler.source>16</maven.compiler.source>
         <maven.compiler.target>16</maven.compiler.target>
-        <kotlin.version>1.8.20</kotlin.version>
+        <kotlin.version>1.8.21</kotlin.version>
         <plugin.name>SunnyUtils</plugin.name>
     </properties>
 
